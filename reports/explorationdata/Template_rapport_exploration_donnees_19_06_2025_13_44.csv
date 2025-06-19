@@ -1,0 +1,9 @@
+﻿Nom du dossier,Nom du sous dossier,Description,Disponibilité de la variable a priori,Type informatique,Taux de non correspondance entre metadata et dossier,Gestion du taux de non correspondance,Distribution des valeurs,Remarques sur la colonne,Taille totale (Mo),Nb fichiers,Taille moyenne (Ko),Mode couleur,Taille d'image conforme au metadata,Dimensions uniques trouvées
+COVID,images,,Oui,.png,100.00%,,3616,,123.58,3616,35.0,L,NOK,"(299, 299)"
+COVID,masks,,Oui,.png,100.00%,,3616,,5.1,3616,1.45,RGB,OK,"(256, 256)"
+Lung_Opacity,images,,Oui,.png,100.00%,,6012,,201.98,6012,34.4,L,NOK,"(299, 299)"
+Lung_Opacity,masks,,Oui,.png,100.00%,,6012,,8.03,6012,1.37,RGB,OK,"(256, 256)"
+Normal,images,,Oui,.png,0.00%,,10192,,362.23,10192,36.39,L,OK,"(299, 299)"
+Normal,masks,,Oui,.png,0.00%,,10192,,14.34,10192,1.44,RGB,OK,"(256, 256)"
+Viral Pneumonia,images,,Oui,.png,100.00%,,1345,,51.7,1345,39.36,"RGB, L",NOK,"(299, 299)"
+Viral Pneumonia,masks,,Oui,.png,100.00%,,1345,,2.02,1345,1.54,RGB,OK,"(256, 256)"
