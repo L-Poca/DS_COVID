@@ -26,7 +26,12 @@ class GUI:
         )
         self.btn_analyse.grid(row=1, column=1, pady=10)
 
-        self.progress_bar = ttk.Progressbar(root, orient="horizontal", length=400, mode="determinate")
+        self.progress_bar = ttk.Progressbar(
+            root,
+            orient="horizontal",
+            length=400,
+            mode="determinate"
+            )
         self.progress_bar.grid(row=2, column=0, columnspan=3, padx=10, pady=5)
 
         self.label_status = tk.Label(root, text="", fg="gray")
