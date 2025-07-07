@@ -4,6 +4,7 @@ st.title("🧮 Mini calculatrice")
 
 x = st.number_input("Entrer une valeur", value=1.0)
 y = st.number_input("Entrer une autre valeur", value=1.0)
+
 operation = st.selectbox(
     "Opération",
     ["Addition", "Multiplication", "Division"]
