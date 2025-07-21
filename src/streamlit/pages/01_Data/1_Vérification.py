@@ -17,7 +17,7 @@ def check_data_directory(project_dir):
     """Vérifie l'existence du dossier des données."""
     if not project_dir:
         return None
-    data_dir = project_dir / "data/covid19-radiography-database/COVID-19_Radiography_Dataset"
+    data_dir = project_dir / "data/raw/covid19-radiography-database/COVID-19_Radiography_Dataset"
     return data_dir if data_dir.exists() else None
 
 def analyze_data_content(data_dir):
