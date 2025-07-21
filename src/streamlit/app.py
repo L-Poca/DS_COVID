@@ -71,30 +71,16 @@ pages_structure = discover_pages()
 if pages_structure:
     # Ajouter une page d'accueil simple
     def home_page():
-        st.title("🦠 Détection COVID-19")
-        st.write("Application de détection COVID-19 à partir d'images radiographiques")
-        
-        st.info("🚧 L'application est en cours de développement")
-        
-        st.markdown("""
-        ### 📋 Fonctionnalités disponibles :
-        - **📊 Data** : Chargement et exploration des données
-        - **🤖 Model** : Entraînement et évaluation
-        - **🎯 Results** : Prédictions et analyses
-        """)
-        
-        # Afficher un aperçu des sections
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.info("**📊 Section Data**\n\nChargement et exploration des données COVID-19")
-            
-        with col2:
-            st.info("**🤖 Section Model**\n\nEntraînement et évaluation des modèles")
-            
-        with col3:
-            st.info("**🎯 Section Results**\n\nPrédictions et analyses")
-    
+        #st.title("🦠 Détection COVID-19")
+
+        # afficher le contenu du README du projet
+        readme_path = Path(__file__).parent.parent.parent / "README.md"
+        if readme_path.exists():
+            with open(readme_path, "r", encoding="utf-8") as f:
+                readme_content = f.read()
+                st.markdown(readme_content)
+        else:
+            st.error(f"❌ Fichier README non trouvé : {readme_path}")
     # Navigation personnalisée avec sidebar
     with st.sidebar:
         st.title("🦠 Navigation")
