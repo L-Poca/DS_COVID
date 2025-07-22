@@ -5,6 +5,11 @@ import inspect
 from pathlib import Path
 
 
+# Ajout du répertoire racine du projet au PYTHONPATH pour tous les imports
+project_root = Path(__file__).parent.parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
 # Configuration de la page AVANT toute autre chose
 st.set_page_config(
     page_title="Détection COVID-19",
