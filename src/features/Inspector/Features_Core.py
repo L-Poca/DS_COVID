@@ -28,7 +28,7 @@ def get_features_files():
     try:
         # Chemin correct vers le dossier src/features
         current_file = Path(__file__)
-        features_dir = current_file.parent
+        features_dir = current_file.parent.parent
         
         # Vérifier que le dossier existe
         if not features_dir.exists():
@@ -36,6 +36,8 @@ def get_features_files():
         
         # Récupérer tous les fichiers Python sauf __init__.py et Features_*
         all_files = list(features_dir.glob("*.py"))
+        # Ajouter les fichiers des sous-dossiers
+        all_files.extend(list(features_dir.glob("*/*.py")))
         sorted_files = sorted([f for f in all_files 
                              if f.name != "__init__.py"])
         
@@ -137,21 +139,40 @@ def analyze_module_functions(file_path):
                         }
                         params_info.append(param_info)
                     
-                    # Analyser le type de retour
+                    # Analyser le type de retour (annotation)
                     return_annotation = str(sig.return_annotation) if sig.return_annotation != inspect.Signature.empty else None
                     
-                    # Extraction des inputs/outputs désactivée (fonction absente)
+                    # Détecter automatiquement les valeurs de retour dans le code source
+                    import re
+                    return_values = []
+                    if source and source != "Code source non disponible":
+                        # Chercher toutes les instructions return
+                        return_matches = re.findall(r'return\s+(.+)', source)
+                        for match in return_matches:
+                            # Nettoyer et limiter la longueur
+                            clean_return = match.strip().split('#')[0].strip()  # Supprimer les commentaires
+                            if len(clean_return) > 50:
+                                clean_return = clean_return[:47] + "..."
+                            return_values.append(clean_return)
+                    
+                    # Si pas de return trouvé, vérifier si c'est None implicite
+                    if not return_values and source and source != "Code source non disponible":
+                        if 'return' not in source:
+                            return_values = ['None (implicite)']
+                    
                     function_info = {
                         'name': name,
                         'doc': obj.__doc__ or "Pas de documentation",
                         'signature': str(sig),
                         'parameters': params_info,
                         'return_annotation': return_annotation,
+                        'return_values': return_values,  # Nouvelles valeurs détectées
                         'inputs': [],
                         'outputs': [],
                         'source': source,
                         'source_lines': source_lines,
-                        'file': file_path.name
+                        'file': file_path.name,
+                        'folder': file_path.parent.name if file_path.parent.name != 'features' else 'features (racine)'
                     }
                     functions_info.append(function_info)
                 except Exception as e:
@@ -163,7 +184,8 @@ def analyze_module_functions(file_path):
                         'parameters': [],
                         'source': "Non disponible",
                         'source_lines': 0,
-                        'file': file_path.name
+                        'file': file_path.name,
+                        'folder': file_path.parent.name if file_path.parent.name != 'features' else 'features (racine)'
                     })
                     
     except Exception as e:

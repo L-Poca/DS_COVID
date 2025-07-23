@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from src.features.Features_Core import get_features_files, analyze_module_functions
+from src.features.Inspector.Features_Core import *
 
 #st.set_page_config(page_title="Inspection des Features", layout="wide")
 st.title("🔬 Inspection des Fonctions Features")
@@ -42,9 +42,11 @@ if filtered:
     df = pd.DataFrame([
         {
             "Fonction": f["name"],
+            "Dossier": f["folder"],
             "Fichier": f["file"],
             "Lignes": f["source_lines"],
             "Paramètres": len(f["parameters"]),
+            "Retour": ", ".join(f.get("return_values", ["Non détecté"])) if f.get("return_values") else "Non détecté",
             "Doc": "✅" if f["doc"] and f["doc"] != "Pas de documentation" else "❌",
             "Description": (f["doc"][:80] + "...") if f["doc"] and len(f["doc"]) > 80 else (f["doc"] or "Pas de documentation")
         }
@@ -61,6 +63,10 @@ if filtered:
     st.markdown(f"**Fichier :** `{func['file']}`  ")
     st.markdown(f"**Lignes de code :** {func['source_lines']}")
     st.markdown(f"**Paramètres :** {len(func['parameters'])}")
+    if func.get('return_values'):
+        st.markdown(f"**Valeurs de retour :** {', '.join(func['return_values'])}")
+    else:
+        st.markdown(f"**Valeurs de retour :** Non détecté")
     if func['doc'] and func['doc'] != "Pas de documentation":
         st.info(func['doc'])
     else:

@@ -8,7 +8,7 @@ import sys
 
 def check_project_directory():
     """Vérifie l'existence du répertoire du projet."""
-    project_dir = Path(__file__).parent.parent.parent#.parent.parent
+    project_dir = Path(__file__).parent.parent.parent.parent
     return project_dir if project_dir.exists() else None
 
 def check_data_directory(project_dir):

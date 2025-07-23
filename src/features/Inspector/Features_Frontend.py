@@ -4,7 +4,7 @@ Frontend Streamlit pour l'inspection des features
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-from src.features.Features_Core import get_features_files, analyze_module_functions, get_all_functions_summary
+from src.features.Inspector.Features_Core import get_features_files, analyze_module_functions, get_all_functions_summary
 
 
 def show_features_files():
