@@ -46,7 +46,7 @@ def Parcours_Dossier_Images(paths):
         results[f"luminosite_{key}"] = lum
         results[f"contraste_{key}"] = cont
         if lum and cont:
-            Show_plot(lum, cont)
+            Show_plot(lum, cont, key)
     return results
 
 
@@ -76,19 +76,19 @@ def Run_All_Dossiers():
     dict_path = Get_All_Paths()
     Parcours_Dossier_Images(dict_path)
 
-def Show_plot(luminosites, contrastes):
+def Show_plot(luminosites, contrastes, Categories=None):
     # Affichage des histogrammes
     plt.figure(figsize=(12, 5))
 
     plt.subplot(1, 2, 1)
     plt.hist(luminosites, bins=30, color='yellow', edgecolor='black')
-    plt.title('Histogramme de la luminosité image Covid')
+    plt.title(f'Histogramme de la luminosité image {Categories}')
     plt.xlabel('Luminosité')
     plt.ylabel("Nombre d'images")
 
     plt.subplot(1, 2, 2)
     plt.hist(contrastes, bins=30, color='gray', edgecolor='black')
-    plt.title('Histogramme du contraste image Covid')
+    plt.title(f'Histogramme du contraste image {Categories}')
     plt.xlabel('Contraste')
     plt.ylabel("Nombre d'images")
 
