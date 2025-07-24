@@ -29,6 +29,7 @@ google-pasta==0.2.0
 grpcio==1.73.0
 h5py==3.14.0
 idna==3.10
+import-ipynb==0.2
 ipykernel==6.29.5
 ipython==9.3.0
 ipython_pygments_lexers==1.1.1
