@@ -23,6 +23,31 @@ def Get_All_Paths():
     }
     return paths
 
+def Get_All_Paths_2():
+    # Chemin vers le dossier contenant les images
+    current_file = Path(__file__)
+    Global_Path = current_file.parent.parent.parent.parent
+    Data_Path = f"{Global_Path}/data/raw/COVID-19_Radiography_Dataset/COVID-19_Radiography_Dataset"
+    paths = {
+        "covid": {
+            "img": rf"{Data_Path}/COVID/images",
+            "mask": rf"{Data_Path}/COVID/masks"
+        },
+        "normal": {
+            "img": rf"{Data_Path}/Normal/images",
+            "mask": rf"{Data_Path}/Normal/masks"
+        },
+        "lung": {
+            "img": rf"{Data_Path}/Lung_Opacity/images",
+            "mask": rf"{Data_Path}/Lung_Opacity/masks"
+        },
+        "pneumonia": {
+            "img": rf"{Data_Path}/Viral Pneumonia/images",
+            "mask": rf"{Data_Path}/Viral Pneumonia/masks"
+        }
+    }
+    return paths
+
 def calculer_luminosite_contraste(image):
 
     # Convertit l'image en niveaux de gris
@@ -49,8 +74,24 @@ def Parcours_Dossier_Images(paths):
             Show_plot(lum, cont, key)
     return results
 
-
-    
+def Parcours_Dossier_Images_2(paths):
+    """
+    Parcourt un ou plusieurs dossiers d'images et calcule la luminosité et le contraste pour chaque image.
+    """
+    results = {}
+    for key, paths_dict in paths.items():
+        print(f"Traitement du dossier : {key}")
+        img_path = paths_dict['img']
+        mask_path = paths_dict['mask']
+        if not os.path.exists(img_path):
+            print(f"Le chemin {img_path} n'existe pas.")
+            continue
+        lum, cont = Extract_Luminosite_Contraste(img_path)
+        results[f"luminosite_{key}"] = lum
+        results[f"contraste_{key}"] = cont
+        if lum and cont:
+            Show_plot(lum, cont, key)
+    return results  
     
 
 def Extract_Luminosite_Contraste(path_img):
@@ -75,6 +116,10 @@ def Extract_Luminosite_Contraste(path_img):
 def Run_All_Dossiers():
     dict_path = Get_All_Paths()
     Parcours_Dossier_Images(dict_path)
+
+def Run_All_Dossiers_2():
+    dict_path = Get_All_Paths_2()
+    Parcours_Dossier_Images_2(dict_path)
 
 def Show_plot(luminosites, contrastes, Categories=None):
     # Affichage des histogrammes
