@@ -1,7 +1,8 @@
-# select_folders.py
-from ipywidgets import Text, VBox, Button, Output
+from ipywidgets import Text, VBox, Button, Output, Layout
 from IPython.display import display
 import os
+import threading
+import time
 
 class FolderSelector:
     def __init__(self):
@@ -42,12 +43,21 @@ class FolderSelector:
         self.input_box.value = ""
 
     def terminer(self, _):
+        # Désactive tous les widgets
         self.bouton_valider.disabled = True
         self.bouton_terminer.disabled = True
         self.input_box.disabled = True
+
         self.fini = True
         with self.out:
             print("\n✔️ Saisie terminée.")
             print("📁 Dossiers retenus :")
             for path in self.chemins:
                 print(f" - {path}")
+
+        # Lance un timer pour cacher le widget après 5 secondes
+        def cacher_ui():
+            time.sleep(5)
+            self.ui.layout.display = 'none'
+
+        threading.Thread(target=cacher_ui, daemon=True).start()
