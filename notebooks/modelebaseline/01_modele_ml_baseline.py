@@ -11,7 +11,7 @@ from PIL import Image
 from tqdm import tqdm
 import random
 
-print("test raf 3")
+print("test raf 31/07/2025")
 # Configuration
 SEED = 42
 IMG_SIZE = (299, 299)
