@@ -17,7 +17,7 @@ import random
 # Configuration
 SEED = 42
 IMG_SIZE = (128, 128)
-SAMPLES_PER_CLASS = 100
+SAMPLES_PER_CLASS = 1000
 
 # Définition des classes
 classes = ['COVID', 'NORMAL', 'VIRAL', 'LUNG']
