@@ -1,7 +1,5 @@
-Project Name
-==============================
-
-This repo is a Starting Pack for DS projects. You can rearrange the structure to make it fits your project.
+# 🦠 Détection COVID-19
+## Application de détection COVID-19 à partir d'images radiographiques
 
 Project Organization
 ------------
@@ -39,7 +37,3 @@ Project Organization
     │   │
     │   ├── visualization  <- Scripts to create exploratory and results oriented visualizations
     │   │   └── visualize.py
-
---------
-
-<p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
