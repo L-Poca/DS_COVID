@@ -45,8 +45,8 @@ def build_baseline_cnn(input_shape=(256, 256, 1),num_classes=4):
     return model
 
 SEED=42
-IMG_SIZE = (299, 299)
-SAMPLES_PER_CLASS = 1000
+IMG_SIZE = (256, 256)
+SAMPLES_PER_CLASS = 400
 
 # Définition des classes
 classes = ['COVID', 'NORMAL', 'VIRAL', 'LUNG']
@@ -54,10 +54,10 @@ class_labels = {0: 'COVID', 1: 'NORMAL', 2: 'VIRAL', 3: 'LUNG'}
 
 # Définition des chemins par classe
 class_paths = {
-    0: r"data\raw\COVID-19_Radiography_Dataset\COVID-19_Radiography_Dataset\COVID\images",
-    1: r"data\raw\COVID-19_Radiography_Dataset\COVID-19_Radiography_Dataset\Normal\images",
-    2: r"data\raw\COVID-19_Radiography_Dataset\COVID-19_Radiography_Dataset\Viral Pneumonia\images",
-    3: r"data\raw\COVID-19_Radiography_Dataset\COVID-19_Radiography_Dataset\Lung_Opacity\images",
+    0: r"data/raw/COVID-19_Radiography_Dataset/COVID-19_Radiography_Dataset/COVID/images",
+    1: r"data/raw/COVID-19_Radiography_Dataset/COVID-19_Radiography_Dataset/Normal/images",
+    2: r"data/raw/COVID-19_Radiography_Dataset/COVID-19_Radiography_Dataset/Viral Pneumonia/images",
+    3: r"data/raw/COVID-19_Radiography_Dataset/COVID-19_Radiography_Dataset/Lung_Opacity/images",
 }
 
 
@@ -77,9 +77,9 @@ def load_images_flat(folder_path, label, img_size=(299, 299), max_images=None):
         try:
             img = Image.open(os.path.join(folder_path, file)).convert('L')
             img = img.resize(img_size)
-            img=img.astype('float32')
-            img_norm=(img/127.5)-1
-            data.append(np.array(img_norm).flatten())
+            img = np.array(img).astype('float32')
+            img_norm = (img / 127.5) - 1 # Normalisation entre -1 et 1
+            data.append(img_norm.flatten())
             labels.append(label)
         except Exception as e:
             print(f"[WARNING] Erreur avec {file} : {e}")
@@ -107,16 +107,25 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, stratify=y, random_state=42
 )
 
+# CORRECTION : Reshape des données pour le CNN
+# De (n_samples, 65536) vers (n_samples, 256, 256, 1)
+print(f"[INFO] Shape avant reshape: X_train={X_train.shape}, X_test={X_test.shape}")
+
+X_train = X_train.reshape(-1, IMG_SIZE[0], IMG_SIZE[1], 1)
+X_test = X_test.reshape(-1, IMG_SIZE[0], IMG_SIZE[1], 1)
+
+print(f"[INFO] Shape après reshape: X_train={X_train.shape}, X_test={X_test.shape}")
+
 input_shape = (256, 256, 1)  
 num_classes = 4              
 
-model = build_multiclass_cnn(input_shape, num_classes)
+model = build_baseline_cnn(input_shape, num_classes)
 model.summary()
 
 history = model.fit(
     X_train,          
     y_train,          
-    epochs=50,
+    epochs=10,
     batch_size=32,
     validation_data=(X_test, y_test)
 )
