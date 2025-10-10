@@ -1,0 +1,138 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ds-covid"
+version = "0.1.0"
+description = "COVID-19 Radiography Analysis Package for Data Science"
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Rafael Cepa", email = "rafael.cepa@cnrs-orleans.fr"},
+    {name = "Cirine", email = "cirine@example.com"},
+    {name = "Steven Moire", email = "steven.moire@example.com"},
+]
+maintainers = [
+    {name = "Rafael Cepa", email = "rafael.cepa@cnrs-orleans.fr"}
+]
+keywords = ["covid-19", "radiography", "machine-learning", "medical-imaging", "deep-learning"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "Topic :: Scientific/Engineering :: Image Processing",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "tensorflow>=2.10.0",
+    "opencv-python>=4.5.0",
+    "numpy>=1.21.0",
+    "pandas>=1.3.0",
+    "matplotlib>=3.5.0",
+    "seaborn>=0.11.0",
+    "scikit-learn>=1.0.0",
+    "pillow>=8.3.0",
+    "tqdm>=4.62.0",
+    "plotly>=5.0.0",
+    "streamlit>=1.10.0",
+    "scikit-image>=0.18.0",
+    "ruff>=0.1.0",
+    "pytest>=7.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=3.0.0",
+    "ruff>=0.1.0",
+    "mypy>=0.991",
+    "jupyter>=1.0.0",
+    "notebook>=6.4.0",
+]
+docs = [
+    "sphinx>=4.0.0",
+    "sphinx-rtd-theme>=1.0.0",
+    "myst-parser>=0.18.0",
+]
+colab = [
+    "google-colab",
+    "kaggle>=1.5.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/L-Poca/DS_COVID"
+Repository = "https://github.com/L-Poca/DS_COVID.git"
+Documentation = "https://github.com/L-Poca/DS_COVID/blob/main/README.md"
+"Bug Tracker" = "https://github.com/L-Poca/DS_COVID/issues"
+
+[project.scripts]
+ds-covid-train = "ds_covid.cli:train_model"
+ds-covid-predict = "ds_covid.cli:predict"
+ds-covid-apply-masks = "ds_covid.cli:apply_masks"
+ds-covid-streamlit = "ds_covid.cli:run_streamlit"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"ds_covid" = ["*.yml", "*.yaml", "*.json"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py38"
+exclude = [
+    ".git",
+    "__pycache__",
+    ".venv",
+    "venv",
+    "build",
+    "dist",
+    ".eggs",
+    "notebooks"
+]
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "UP", # pyupgrade
+]
+ignore = [
+    "E501",  # line too long, handled by black
+    "B008",  # do not perform function calls in argument defaults
+    "C901",  # too complex
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-string-normalization = false
+line-ending = "auto"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+addopts = [
+    "--cov=src/ds_covid",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--strict-markers",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+]
