@@ -23,15 +23,19 @@ def train_model(model, X_train, y_train):
 
 
 def train_with_grid_search(model, param_grid, X_train, y_train, cv=3, scoring="accuracy"):
-    """Entraîne le modèle avec Grid Search si param_grid est fourni."""
+    """Entraîne le modèle avec ou sans Grid Search."""
+    model_name = model.__class__.__name__
+    print(f"\n[INFO] Entraînement du modèle : {model_name}")
+
     if param_grid:
         grid_search = GridSearchCV(model, param_grid, cv=cv, scoring=scoring, n_jobs=-1, verbose=1)
         grid_search.fit(X_train, y_train)
-        print(f"[INFO] Meilleurs paramètres pour {model.__class__.__name__} : {grid_search.best_params_}")
+        print(f"[INFO] Meilleurs paramètres pour {model_name} : {grid_search.best_params_}")
         return grid_search.best_estimator_
     else:
-        # Si pas de param_grid, entraîne normalement
-        return train_model(model, X_train, y_train)
+        model.fit(X_train, y_train)
+        return model
+
 
 
 def evaluate_model(
