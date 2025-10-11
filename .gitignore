@@ -167,3 +167,8 @@ data/
 env_windows/pyvenv.cfg
 /env_windows
 /env_linux
+
+#doc
+
+doc/
+
