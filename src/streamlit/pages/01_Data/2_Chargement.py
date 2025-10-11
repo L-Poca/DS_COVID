@@ -6,6 +6,10 @@ import os
 from PIL import Image
 import plotly.express as px
 import plotly.graph_objects as go
+from src.features.Verifs_Env.Vérifications_Back import *
+from src.features.Widget_Streamlit.W_Vérifications_Front import *
+
+show_global_status(run_all_checks())
 
 # ====================================================================
 # 🔧 BACKEND - LOGIQUE DE CHARGEMENT

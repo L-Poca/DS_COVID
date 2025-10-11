@@ -1,6 +1,10 @@
 import streamlit as st
 import pandas as pd
 from src.features.Inspector.Features_Core import *
+from src.features.Verifs_Env.Vérifications_Back import *
+from src.features.Widget_Streamlit.W_Vérifications_Front import *
+
+show_global_status(run_all_checks())
 
 #st.set_page_config(page_title="Inspection des Features", layout="wide")
 st.title("🔬 Inspection des Fonctions Features")
@@ -75,7 +79,7 @@ if filtered:
         st.markdown("**Paramètres détaillés :**")
         for p in func['parameters']:
             st.write(f"- `{p['name']}` : {p.get('annotation', 'Type non spécifié')} (Défaut : {p.get('default', 'Requis')})")
-    if st.toggle("Afficher le code source"):
-        st.code(func['source'], language="python")
+    #if st.toggle("Afficher le code source"):
+    st.code(func['source'], language="python")
 else:
     st.warning("Aucune fonction trouvée avec ces critères.")

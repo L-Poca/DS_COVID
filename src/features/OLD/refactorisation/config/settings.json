@@ -1,0 +1,6 @@
+{
+  "IMG_SIZE": [128, 128],
+  "SAMPLES_PER_CLASS": 1000,
+  "CLASSES": ["COVID", "NORMAL", "VIRAL", "LUNG"]
+  
+}

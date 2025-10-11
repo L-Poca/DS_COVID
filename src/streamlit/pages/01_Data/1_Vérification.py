@@ -1,8 +1,8 @@
 import streamlit as st
 from pathlib import Path
 
-from src.features.Verifications.Vérifications_Back import *
-from src.features.Vérifications_Front import *
+from src.features.Verifs_Env.Vérifications_Back import *
+from src.features.Widget_Streamlit.W_Vérifications_Front import *
 
 
 

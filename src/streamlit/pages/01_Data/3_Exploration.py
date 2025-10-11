@@ -17,7 +17,7 @@ try:
     from tabs.overview_tab import show_overview_tab
     from tabs.metadata_tab import show_metadata_tab
     from tabs.images_tab import show_images_tab
-    from tabs.comparison_tab import show_comparison_tab
+    #from tabs.comparison_tab import show_comparison_tab
     from tabs.filtering_tab import show_filtering_tab
     st.success("✅ Tous les modules d'onglets importés avec succès")
 except ImportError as e:
@@ -84,11 +84,10 @@ def main():
         st.success(f"✅ Données chargées: {len(categories)} catégories disponibles")
         
         # Navigation par onglets
-        tab1, tab2, tab3, tab4, tab5 = st.tabs([
+        tab1, tab2, tab3, tab4 = st.tabs([
             "📊 Vue d'ensemble",
             "🔍 Métadonnées", 
             "🖼️ Images",
-            "⚖️ Comparaison",
             "🔎 Filtrage"
         ])
         
@@ -114,13 +113,6 @@ def main():
                 st.exception(e)
         
         with tab4:
-            try:
-                show_comparison_tab(metadata_dfs)
-            except Exception as e:
-                st.error(f"❌ Erreur dans l'onglet Comparaison: {e}")
-                st.exception(e)
-        
-        with tab5:
             try:
                 show_filtering_tab(metadata_dfs)
             except Exception as e:

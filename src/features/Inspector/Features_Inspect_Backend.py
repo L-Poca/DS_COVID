@@ -171,7 +171,7 @@ def show_verification_backend():
     
     try:
         # Tentative d'import (le PYTHONPATH est géré dans app.py)
-        from src.features.Verifications.Vérifications_Back import run_all_checks
+        from src.features.Verifs_Env.Vérifications_Back import run_all_checks
         
         st.success("✅ Module Vérifications importé avec succès")
         

@@ -1,0 +1,374 @@
+{  
+    "default_settings": {
+    "random_state": 42,
+    "n_jobs": -1,
+    "verbose": 1,
+    "test_size": 0.2,
+    "stratify": true
+  },
+  
+  "evaluation_metrics": {
+    "classification": [
+      "accuracy",
+      "precision_macro",
+      "recall_macro",
+      "f1_macro",
+      "f1_weighted",
+      "roc_auc_ovr",
+      "balanced_accuracy"
+    ],
+    "detailed_report": true,
+    "confusion_matrix": true,
+    "feature_importance": true
+  },
+  
+  "pipeline_configs": {
+    "basic_rf": {
+      "name": "Random Forest Basique",
+      "description": "Pipeline simple avec Random Forest pour débutants",
+      "steps": [
+        {
+          "name": "scaler",
+          "transformer": "StandardScaler",
+          "params": {}
+        },
+        {
+          "name": "classifier",
+          "transformer": "RandomForestClassifier",
+          "params": {
+            "n_estimators": 100,
+            "random_state": 42,
+            "max_depth": 20
+          }
+        }
+      ],
+      "grid_search": false,
+      "cv_folds": 5
+    },
+    
+    "optimized_rf": {
+      "name": "Random Forest Optimisé",
+      "description": "Random Forest avec GridSearch et sélection de features",
+      "steps": [
+        {
+          "name": "scaler",
+          "transformer": "StandardScaler",
+          "params": {}
+        },
+        {
+          "name": "feature_selection",
+          "transformer": "SelectKBest",
+          "params": {
+            "score_func": "f_classif",
+            "k": 1000
+          }
+        },
+        {
+          "name": "classifier",
+          "transformer": "RandomForestClassifier",
+          "params": {
+            "random_state": 42
+          }
+        }
+      ],
+      "grid_search": true,
+      "grid_params": {
+        "feature_selection__k": [500, 1000, 1500, 2000],
+        "classifier__n_estimators": [50, 100, 200],
+        "classifier__max_depth": [10, 20, 30, null],
+        "classifier__min_samples_split": [2, 5, 10]
+      },
+      "cv_folds": 5,
+      "scoring": "accuracy"
+    },
+    
+    "svm_pipeline": {
+      "name": "SVM avec PCA",
+      "description": "Support Vector Machine avec réduction de dimensionnalité",
+      "steps": [
+        {
+          "name": "scaler",
+          "transformer": "StandardScaler",
+          "params": {}
+        },
+        {
+          "name": "pca",
+          "transformer": "PCA",
+          "params": {
+            "n_components": 0.95
+          }
+        },
+        {
+          "name": "classifier",
+          "transformer": "SVC",
+          "params": {
+            "probability": true,
+            "random_state": 42
+          }
+        }
+      ],
+      "grid_search": true,
+      "grid_params": {
+        "pca__n_components": [0.85, 0.90, 0.95, 500, 1000],
+        "classifier__C": [0.1, 1, 10, 100],
+        "classifier__kernel": ["rbf", "linear"],
+        "classifier__gamma": ["scale", "auto", 0.001, 0.01]
+      },
+      "cv_folds": 3,
+      "scoring": "f1_weighted"
+    },
+    
+    "gradient_boosting": {
+      "name": "Gradient Boosting Avancé",
+      "description": "XGBoost avec feature engineering complet",
+      "steps": [
+        {
+          "name": "imputer",
+          "transformer": "SimpleImputer",
+          "params": {
+            "strategy": "mean"
+          }
+        },
+        {
+          "name": "scaler",
+          "transformer": "RobustScaler",
+          "params": {}
+        },
+        {
+          "name": "feature_selection",
+          "transformer": "SelectKBest",
+          "params": {
+            "score_func": "f_classif",
+            "k": 1500
+          }
+        },
+        {
+          "name": "classifier",
+          "transformer": "GradientBoostingClassifier",
+          "params": {
+            "random_state": 42
+          }
+        }
+      ],
+      "grid_search": true,
+      "grid_params": {
+        "feature_selection__k": [1000, 1500, 2000],
+        "classifier__n_estimators": [100, 200],
+        "classifier__learning_rate": [0.05, 0.1, 0.2],
+        "classifier__max_depth": [3, 5, 7],
+        "classifier__subsample": [0.8, 0.9, 1.0]
+      },
+      "cv_folds": 5,
+      "scoring": "roc_auc_ovr"
+    },
+    
+    "ensemble_voting": {
+      "name": "Ensemble Voting",
+      "description": "Combinaison de plusieurs modèles avec vote majoritaire",
+      "steps": [
+        {
+          "name": "scaler",
+          "transformer": "StandardScaler",
+          "params": {}
+        },
+        {
+          "name": "feature_selection",
+          "transformer": "SelectKBest",
+          "params": {
+            "score_func": "f_classif",
+            "k": 1200
+          }
+        },
+        {
+          "name": "classifier",
+          "transformer": "VotingClassifier",
+          "params": {
+            "estimators": [
+              ["rf", "RandomForestClassifier", {"n_estimators": 100, "random_state": 42}],
+              ["svc", "SVC", {"probability": true, "random_state": 42}],
+              ["gb", "GradientBoostingClassifier", {"n_estimators": 100, "random_state": 42}]
+            ],
+            "voting": "soft"
+          }
+        }
+      ],
+      "grid_search": false,
+      "cv_folds": 5
+    },
+    
+    "deep_feature_pipeline": {
+      "name": "Pipeline Features Profondes",
+      "description": "Extraction avancée de features avec transformations",
+      "steps": [
+        {
+          "name": "image_prep",
+          "transformer": "ImagePreprocessor",
+          "params": {
+            "flatten": true,
+            "normalize": true,
+            "resize": [128, 128]
+          }
+        },
+        {
+          "name": "variance_threshold",
+          "transformer": "VarianceThreshold",
+          "params": {
+            "threshold": 0.01
+          }
+        },
+        {
+          "name": "scaler",
+          "transformer": "MinMaxScaler",
+          "params": {}
+        },
+        {
+          "name": "feature_selection",
+          "transformer": "SelectKBest",
+          "params": {
+            "score_func": "mutual_info_classif",
+            "k": 2000
+          }
+        },
+        {
+          "name": "pca",
+          "transformer": "PCA",
+          "params": {
+            "n_components": 0.98
+          }
+        },
+        {
+          "name": "classifier",
+          "transformer": "RandomForestClassifier",
+          "params": {
+            "n_estimators": 200,
+            "max_depth": 25,
+            "random_state": 42,
+            "class_weight": "balanced"
+          }
+        }
+      ],
+      "grid_search": true,
+      "grid_params": {
+        "variance_threshold__threshold": [0.001, 0.01, 0.1],
+        "feature_selection__k": [1500, 2000, 2500],
+        "pca__n_components": [0.95, 0.98, 1000, 1500],
+        "classifier__n_estimators": [150, 200, 250],
+        "classifier__max_depth": [20, 25, 30]
+      },
+      "cv_folds": 5,
+      "scoring": "f1_macro"
+    },
+    
+    "fast_prototype": {
+      "name": "Prototype Rapide",
+      "description": "Configuration légère pour tests rapides",
+      "steps": [
+        {
+          "name": "scaler",
+          "transformer": "MinMaxScaler",
+          "params": {}
+        },
+        {
+          "name": "feature_selection",
+          "transformer": "SelectKBest",
+          "params": {
+            "score_func": "f_classif",
+            "k": 300
+          }
+        },
+        {
+          "name": "classifier",
+          "transformer": "LogisticRegression",
+          "params": {
+            "random_state": 42,
+            "max_iter": 1000,
+            "class_weight": "balanced"
+          }
+        }
+      ],
+      "grid_search": true,
+      "grid_params": {
+        "feature_selection__k": [200, 300, 500],
+        "classifier__C": [0.1, 1, 10],
+        "classifier__penalty": ["l1", "l2"],
+        "classifier__solver": ["liblinear", "saga"]
+      },
+      "cv_folds": 3,
+      "scoring": "accuracy"
+    },
+    
+    "medical_specialized": {
+      "name": "Spécialisé Médical",
+      "description": "Pipeline optimisé pour images médicales radiographiques",
+      "steps": [
+        {
+          "name": "medical_preprocessor",
+          "transformer": "MedicalImagePreprocessor",
+          "params": {
+            "enhance_contrast": true,
+            "noise_reduction": true,
+            "histogram_equalization": true
+          }
+        },
+        {
+          "name": "scaler",
+          "transformer": "RobustScaler",
+          "params": {}
+        },
+        {
+          "name": "feature_selection",
+          "transformer": "SelectKBest",
+          "params": {
+            "score_func": "chi2",
+            "k": 1800
+          }
+        },
+        {
+          "name": "classifier",
+          "transformer": "RandomForestClassifier",
+          "params": {
+            "n_estimators": 150,
+            "max_depth": 25,
+            "min_samples_split": 3,
+            "min_samples_leaf": 2,
+            "random_state": 42,
+            "class_weight": "balanced_subsample"
+          }
+        }
+      ],
+      "grid_search": true,
+      "grid_params": {
+        "feature_selection__k": [1500, 1800, 2000],
+        "classifier__n_estimators": [100, 150, 200],
+        "classifier__max_depth": [20, 25, 30],
+        "classifier__min_samples_split": [2, 3, 5]
+      },
+      "cv_folds": 5,
+      "scoring": "balanced_accuracy"
+    }
+  },
+
+  
+  "data_preprocessing": {
+    "image_configs": {
+      "target_size": [128, 128],
+      "color_mode": "grayscale",
+      "normalization": "0-1",
+      "data_augmentation": false
+    },
+    "feature_extraction": {
+      "flatten_images": true,
+      "remove_low_variance": true,
+      "handle_missing": "mean_imputation"
+    }
+  },
+  
+  "model_saving": {
+    "save_pipeline": true,
+    "save_predictions": true,
+    "save_feature_importance": true,
+    "save_cv_results": true,
+    "output_directory": "models/pipelines/",
+    "naming_convention": "pipeline_{config_name}_{timestamp}"
+  }
+}
