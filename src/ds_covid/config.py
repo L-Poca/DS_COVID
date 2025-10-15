@@ -18,55 +18,106 @@ from importlib import resources
 
 @dataclass
 class MLSettings:
-    """Configuration pour les modèles ML traditionnels"""
+    """Configuration pour les modèles ML traditionnels - Optimisée pour Colab Pro"""
     random_forest: dict = field(default_factory=lambda: {
-        'n_estimators': 200,
-        'max_depth': 15,
-        'min_samples_split': 5,
-        'min_samples_leaf': 2
+        'n_estimators': 500,     # Plus d'arbres
+        'max_depth': 20,         # Plus profond
+        'min_samples_split': 3,
+        'min_samples_leaf': 1,
+        'max_features': 'sqrt'
     })
     xgboost: dict = field(default_factory=lambda: {
-        'n_estimators': 100,
-        'learning_rate': 0.1,
-        'max_depth': 3,
-        'min_child_weight': 1
+        'n_estimators': 300,     # Plus d'estimateurs
+        'learning_rate': 0.05,   # Plus fin
+        'max_depth': 6,          # Plus profond
+        'min_child_weight': 1,
+        'subsample': 0.8,
+        'colsample_bytree': 0.8,
+        'reg_alpha': 0.1,
+        'reg_lambda': 1.0
     })
-    cv_folds: int = 3
-    n_jobs: int = -1
+    gradient_boosting: dict = field(default_factory=lambda: {
+        'n_estimators': 300,
+        'learning_rate': 0.05,
+        'max_depth': 6,
+        'min_samples_split': 3,
+        'min_samples_leaf': 1,
+        'subsample': 0.8
+    })
+    extra_trees: dict = field(default_factory=lambda: {
+        'n_estimators': 400,
+        'max_depth': 25,
+        'min_samples_split': 2,
+        'min_samples_leaf': 1
+    })
+    cv_folds: int = 5            # Plus de folds
+    n_jobs: int = -1             # Utilise tous les CPU
 
 @dataclass
 class DeepLearningSettings:
-    """Configuration pour le deep learning"""
+    """Configuration pour le deep learning - Optimisée pour Colab Pro"""
     pretrained_weights: str = 'imagenet'
     freeze_base_layers: bool = True
-    fine_tune_layers: int = 10
+    fine_tune_layers: int = 20  # Plus de couches à fine-tuner
+    data_augmentation: bool = True  # Augmentation de données
+    mixed_precision: bool = True   # Precision mixte pour Colab Pro
     callbacks: dict = field(default_factory=lambda: {
-        'early_stopping_patience': 10,
-        'reduce_lr_patience': 5,
-        'reduce_lr_factor': 0.5,
-        'min_lr': 1e-7
+        'early_stopping_patience': 15,  # Plus de patience avec plus d'epochs
+        'reduce_lr_patience': 7,
+        'reduce_lr_factor': 0.3,
+        'min_lr': 1e-8,
+        'model_checkpoint': True,  # Sauvegarde des meilleurs modèles
+        'tensorboard': True       # Logs pour TensorBoard
     })
+    
+    # Architectures à tester (pour ensemble methods)
+    architectures: List[str] = field(default_factory=lambda: [
+        'EfficientNetB3',  # Plus puissant qu'B0
+        'ResNet152V2',     # Plus profond que ResNet50
+        'VGG19',           # Plus profond que VGG16
+        'DenseNet201'      # Architecture dense
+    ])
 
 @dataclass
 class TrainingSettings:
-    """Configuration pour l'entraînement"""
-    batch_size: int = 32
-    epochs: int = 50
+    """Configuration pour l'entraînement - Optimisée pour Colab Pro"""
+    batch_size: int = 64  # Plus gros batch pour Colab Pro
+    epochs: int = 100     # Plus d'epochs avec GPU puissant
     learning_rate: float = 0.001
     validation_split: float = 0.2
     test_split: float = 0.2
     random_seed: int = 42
-    img_size: tuple = (224, 224)
+    img_size: tuple = (256, 256)  # Puissance de 2, optimal pour GPU
     img_channels: int = 3
 
 @dataclass
 class DataSettings:
-    """Configuration pour les données"""
+    """Configuration pour les données - Optimisée pour Colab Pro"""
     class_names: List[str] = field(default_factory=lambda: [
         'COVID', 'Lung_Opacity', 'Normal', 'Viral Pneumonia'
     ])
-    max_images_per_class: int = 1000
-    sample_size_analysis: int = 200
+    max_images_per_class: int = 5000  # Plus d'images avec Colab Pro
+    sample_size_analysis: int = 500   # Échantillon plus large
+    
+    # Paramètres d'augmentation de données
+    augmentation_params: dict = field(default_factory=lambda: {
+        'rotation_range': 20,
+        'width_shift_range': 0.15,
+        'height_shift_range': 0.15,
+        'shear_range': 0.15,
+        'zoom_range': 0.15,
+        'horizontal_flip': True,
+        'brightness_range': [0.8, 1.2],
+        'fill_mode': 'nearest'
+    })
+    
+    # Préprocessing avancé
+    preprocessing: dict = field(default_factory=lambda: {
+        'normalize': True,
+        'standardize': True,
+        'histogram_equalization': False,  # Optionnel pour images médicales
+        'noise_reduction': False          # Optionnel pour améliorer qualité
+    })
     
     @property
     def num_classes(self) -> int:
