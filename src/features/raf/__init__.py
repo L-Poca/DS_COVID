@@ -10,6 +10,7 @@ Modules:
 - augmentation: Augmentation d'images personnalisée
 - models: Modèles ML/DL (baseline, boosting, deep learning, ensemble)
 - evaluation: Métriques, visualisation et comparaison
+- interpretability: Interprétabilité avec SHAP et GradCAM
 - utils: Configuration et utilitaires
 """
 
@@ -28,10 +29,14 @@ try:
     # Augmentation
     from .augmentation import CustomImageAugmenter
     
+    # Interpretability
+    from .interpretability import SHAPExplainer, GradCAMExplainer
+    
     print(f"🎨 RAF (Raw Augmentation Framework) v{__version__} chargé avec succès")
     print(f"✨ NOUVELLE FONCTIONNALITÉ: setup_universal_environment() remplace la cellule 1!")
-    print(f"📊 Modules disponibles: utils, data, augmentation")
-    
+    print(f"� NOUVEAU MODULE: interpretability (SHAP + GradCAM)")
+    print(f"��������� Modules disponibles: utils, data, augmentation, interpretability")
+
 except ImportError as e:
     print(f"⚠️ Erreur import RAF: {e}")
     print("💡 Certains modules peuvent ne pas être disponibles")

@@ -1,0 +1,49 @@
+# ==============================================
+# DÉPENDANCES POUR L'INTERPRÉTABILITÉ
+# ==============================================
+# Modules nécessaires pour SHAP et GradCAM
+
+# Configuration d'environnement
+python-dotenv>=0.19.0     # Gestion des fichiers .env
+
+# Interprétabilité
+shap>=0.41.0              # Explications SHAP
+lime>=0.2.0.1             # Alternative à SHAP
+
+# Deep Learning
+tensorflow>=2.8.0         # Pour GradCAM et modèles CNN
+torch>=1.11.0             # Alternative PyTorch (optionnel)
+torchvision>=0.12.0       # Vision pour PyTorch (optionnel)
+
+# Vision par ordinateur
+opencv-python>=4.5.0      # Traitement d'images pour GradCAM
+pillow>=8.3.0             # PIL pour manipulation d'images
+scikit-image>=0.19.0      # Traitement d'images scientifique
+
+# Machine Learning
+scikit-learn>=1.1.0       # Modèles ML classiques
+xgboost>=1.6.0            # Modèles de boosting
+lightgbm>=3.3.0           # Alternative boosting
+
+# Visualisation
+matplotlib>=3.5.0         # Graphiques de base
+seaborn>=0.11.0           # Graphiques statistiques avancés
+plotly>=5.8.0             # Graphiques interactifs
+
+# Analyse de données
+pandas>=1.4.0             # Manipulation de données
+numpy>=1.21.0             # Calculs numériques
+scipy>=1.8.0              # Calculs scientifiques
+
+# Interface utilisateur
+streamlit>=1.10.0         # Interface web
+ipywidgets>=7.7.0         # Widgets Jupyter
+
+# Utilitaires
+tqdm>=4.64.0              # Barres de progression
+joblib>=1.1.0             # Sérialisation de modèles
+
+# Développement et tests (optionnel)
+pytest>=7.1.0            # Tests unitaires
+jupyter>=1.0.0           # Notebooks
+ipykernel>=6.13.0        # Kernel Jupyter
