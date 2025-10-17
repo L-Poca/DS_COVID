@@ -177,3 +177,6 @@ env_windows/pyvenv.cfg
 
 doc/
 
+# latex
+
+img_latex/
