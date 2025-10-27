@@ -1,110 +1,119 @@
-# Configurations Pipelines JSON
+# Système de découverte automatique des pipelines
 
-Ce dossier contient les fichiers de configuration JSON pour les différents pipelines de traitement d'images utilisés dans le projet de détection COVID-19.
+## 📋 Aperçu
 
-## Fichiers de configuration
+Le nouveau système de découverte automatique remplace l'ancien fichier `pipeline_config.json` statique par une approche dynamique qui scanne automatiquement le dossier `Configs_Pipelines/`.
 
-### `pipeline_config.json`
-Fichier de registre principal qui référence tous les pipelines disponibles. Il contient:
-- **default**: Pipeline simple par défaut
-- **simple**: Pipeline simple et rapide pour classification de base
-- **augmented**: Pipeline avec augmentation de données et masquage
-- **feature_engineering**: Pipeline avec feature engineering avancé
-- **composite**: Pipeline composite avec visualisation
-- **composite_no_viz**: Pipeline composite sans visualisation (plus rapide)
+## 🔍 Fonctionnalités
 
-### Pipelines disponibles
+### Découverte automatique
+- **Scan automatique** : Détecte tous les fichiers `*.json` dans le dossier de configurations  
+- **Catégorisation intelligente** : Classe automatiquement les pipelines par catégorie
+- **Métadonnées extraites** : Récupère nom, description et catégorie depuis chaque fichier
 
-#### `pipeline_simple.json`
-Pipeline de base pour classification rapide.
-- **Catégorie**: data_processing
-- **Étapes**:
-  - ImageLoader
-  - ImageResizer (256x256)
-  - ImageNormalizer
-  - ImageFlattener
-  - LogisticRegression
+### Fonctions principales
 
-#### `pipeline_augmented.json`
-Pipeline avec augmentation de données et masquage pour améliorer la robustesse.
-- **Catégorie**: data_processing
-- **Étapes**:
-  - ImageLoader
-  - ImageResizer (256x256)
-  - ImageNormalizer
-  - ImageAugmenter
-  - ImageMasker
-  - ImageFlattener
-  - ImageStandardScaler
-  - LogisticRegression
+#### `discover_available_pipelines(configs_dir=None)`
+Découvre tous les pipelines disponibles
+```python
+pipelines = discover_available_pipelines()
+print(f"Trouvé {len(pipelines)} pipelines")
+```
 
-#### `pipeline_feature_engineering.json`
-Pipeline avec feature engineering avancé pour extraction de caractéristiques complexes (histogrammes, PCA).
-- **Catégorie**: feature_engineering
-- **Étapes**:
-  - ImageLoader
-  - ImageResizer (256x256)
-  - ImageNormalizer
-  - ImageMasker
-  - ImageFlattener
-  - ImageHistogram (64 bins)
-  - ImagePCA (50 composantes)
-  - LogisticRegression
+#### `print_available_pipelines(configs_dir=None)` 
+Affiche tous les pipelines organisés par catégorie
+```python
+print_available_pipelines()
+```
 
-#### `pipeline_composite_example.json`
-Exemple de pipeline composite avec visualisation des résultats. Combine d'autres pipelines.
-- **Catégorie**: composite
-- **Étapes**:
-  - Preprocessing (depuis pipeline_simple, sans clf et flatten)
-  - VisualizeTransformer
-  - ImageFlattener
-  - Feature Engineering (depuis pipeline_feature_engineering: histogram + PCA)
-  - LogisticRegression
+#### `load_pipeline_by_name(nom_pipeline, masques=None, configs_dir=None)`
+Charge un pipeline spécifique par son nom
+```python
+pipeline = load_pipeline_by_name('tensorflow_pipeline', masks)
+```
 
-#### `pipeline_composite_no_viz.json`
-Pipeline composite sans visualisation, optimisé pour la vitesse.
-- **Catégorie**: composite
-- **Étapes**:
-  - ImageLoader
-  - ImageResizer (256x256)
-  - ImageNormalizer
-  - ImageFlattener
-  - LogisticRegression
+#### `get_default_pipeline(masques=None, configs_dir=None)`
+Charge automatiquement le pipeline par défaut (simple, basic, ou premier disponible)
+```python
+pipeline = get_default_pipeline(masks)
+```
 
-## Utilisation
+#### `list_pipelines_by_category(category=None, configs_dir=None)`
+Liste les pipelines par catégorie
+```python
+deep_learning_pipelines = list_pipelines_by_category('deep_learning')
+```
 
-Pour charger un pipeline depuis les notebooks, utilisez le chemin relatif vers ce dossier:
+## 📁 Catégories automatiques
+
+Le système détecte automatiquement les catégories basées sur :
+
+| Catégorie | Critères de détection |
+|-----------|----------------------|
+| `basic` | Noms contenant 'simple', 'basic' |
+| `deep_learning` | Noms avec 'tensorflow', 'keras', 'transfer' ou classes TF |
+| `data_augmentation` | Noms avec 'augment' ou classes d'augmentation |
+| `feature_engineering` | Noms avec 'feature' ou classes PCA/histogram |
+| `composite` | Type 'composite' ou nom contenant 'composite' |
+| `data_processing` | Catégorie par défaut |
+
+## 🚀 Utilisation dans les notebooks
 
 ```python
-import json
+# Import des nouvelles fonctions
+from src.features.Pipelines.loading_pipelines import (
+    print_available_pipelines,
+    get_default_pipeline,
+    load_pipeline_by_name,
+    list_pipelines_by_category
+)
 
-def load_pipeline_config(pipeline_file):
-    """Charge la configuration d'un pipeline depuis un fichier JSON."""
-    config_path = "../features/Pipelines/Configs_Pipelines/" + pipeline_file
-    with open(config_path) as f:
-        return json.load(f)
+# Découvrir tous les pipelines
+print_available_pipelines()
 
-# Charger le registre
-registry_config = load_pipeline_config("pipeline_config.json")
+# Charger le pipeline par défaut
+pipeline = get_default_pipeline(masks)
 
 # Charger un pipeline spécifique
-pipeline_config = load_pipeline_config("pipeline_simple.json")
+tf_pipeline = load_pipeline_by_name('tensorflow_pipeline', masks)
+
+# Lister par catégorie
+deep_learning_names = list_pipelines_by_category('deep_learning')
 ```
 
-## Structure d'un fichier de pipeline
+## ✅ Avantages
 
-Chaque fichier de pipeline suit cette structure:
+- **✨ Aucune maintenance manuelle** : Plus besoin de mettre à jour `pipeline_config.json`
+- **🔄 Ajout automatique** : Nouveaux pipelines détectés automatiquement
+- **📊 Catégorisation intelligente** : Classification automatique
+- **🛡️ Robuste** : Gestion d'erreurs et fichiers malformés
+- **🔍 Découverte flexible** : Support de dossiers personnalisés
 
+## 🔄 Migration
+
+### Ancien système (deprecated)
+```python
+config = load_pipeline_config("pipeline_config.json")
+pipeline = create_pipeline_from_config(config["simple"])
+```
+
+### Nouveau système (recommandé)  
+```python
+pipeline = load_pipeline_by_name('simple', masks)
+# ou plus simple :
+pipeline = get_default_pipeline(masks)
+```
+
+## 📂 Structure des pipelines supportée
+
+Chaque fichier JSON doit contenir au minimum :
 ```json
 {
-  "name": "nom_du_pipeline",
+  "name": "Nom du pipeline",
   "description": "Description du pipeline",
-  "steps": [
-    {
-      "name": "nom_etape",
-      "class": "NomClasse",
-      "params": { "param1": "valeur1", "param2": "valeur2" }
-    }
-  ]
+  "type": "simple|composite", 
+  "steps": [...]
 }
 ```
+
+Le champ `category` est optionnel et sera détecté automatiquement si absent.

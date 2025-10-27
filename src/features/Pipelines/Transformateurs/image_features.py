@@ -91,14 +91,12 @@ class ImagePCA(BaseEstimator, TransformerMixin):
             # Utiliser les labels fournis lors du transform, ou ceux du fit
             labels_to_use = data_y if data_y is not None else self._labels
             
-            afficher_pca(self.pca, data_x, data_flat, data_pca, max_samples=self.max_viz_points)
+            afficher_pca(self.pca, data_x, data_flat, data_pca)
             create_interactive_pca_plot(
                 self.pca, 
                 data_x, 
                 data_pca, 
-                labels=labels_to_use, 
-                max_points=self.max_viz_points,
-                sampling_method='stratified' if labels_to_use is not None else 'random'
+                labels=labels_to_use
             )
             
         return data_pca

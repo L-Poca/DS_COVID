@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 import pandas as pd
 
 
-def afficher_pca(pca_ref, data_x, data_flat, data_pca, max_samples=None):
+def afficher_pca(pca_ref, data_x, data_flat, data_pca):
     """Affiche les résultats de l'analyse PCA.
     
     Args:
@@ -14,13 +14,7 @@ def afficher_pca(pca_ref, data_x, data_flat, data_pca, max_samples=None):
         data_pca: Images transformées par PCA
         max_samples: Nombre maximum d'échantillons à analyser (None = tous)
     """
-    # Limiter les échantillons si spécifié
-    if max_samples is not None and len(data_x) > max_samples:
-        print(f"📊 Limitation à {max_samples} échantillons sur {len(data_x)} disponibles")
-        indices = np.random.choice(len(data_x), max_samples, replace=False)
-        data_x = data_x[indices]
-        data_flat = data_flat[indices]
-        data_pca = data_pca[indices]
+
     
     print(f"\n🔬 Analyse en Composantes Principales (PCA)")
     print(f"📊 Nombre de composantes: {pca_ref.n_components}")
@@ -97,49 +91,9 @@ def afficher_pca(pca_ref, data_x, data_flat, data_pca, max_samples=None):
     
     plt.tight_layout()
     plt.show()
-    """
-    # Visualisation des composantes principales (pas des données transformées!)
-    original_shape = data_x.shape
-    if len(original_shape) >= 3:  # Images 2D ou plus
-        # Déterminer les dimensions d'image à partir des données originales
-        if len(original_shape) == 3:  # (n_samples, height, width)
-            img_height, img_width = original_shape[1], original_shape[2]
-        elif len(original_shape) == 4:  # (n_samples, height, width, channels)
-            img_height, img_width = original_shape[1], original_shape[2]
-        else:
-            # Essayer de deviner les dimensions à partir du nombre total de pixels
-            total_pixels = data_flat.shape[1]
-            img_height = img_width = int(np.sqrt(total_pixels))
-        
-        print(f"\n🖼️ Visualisation des composantes principales:")
-        print(f"📐 Forme originale des images: {img_height}x{img_width}")
-        n_components_to_show = min(6, pca_ref.n_components)
-        
-        plt.figure(figsize=(15, 3))
-        for i in range(n_components_to_show):
-            plt.subplot(1, n_components_to_show, i + 1)
-            
-            # CORRECTION: Utiliser les composantes du PCA, pas les données transformées
-            try:
-                # Les composantes principales ont la même dimension que les données aplaties
-                component_img = pca_ref.pca.components_[i].reshape(img_height, img_width)
-                plt.imshow(component_img, cmap='RdBu_r', aspect='equal')
-                plt.title(f'PC{i+1}\n({explained_variance_ratio[i]:.1%})')
-                plt.axis('off')
-            except ValueError as e:
-                plt.text(0.5, 0.5, f'Erreur\nreshape\n{str(e)[:30]}...', 
-                        ha='center', va='center', transform=plt.gca().transAxes,
-                        fontsize=8)
-                plt.title(f'PC{i+1}')
-                plt.axis('off')
-        
-        plt.suptitle('Composantes Principales (comme images)', fontsize=14)
-        plt.tight_layout()
-        plt.show()   """
-             
 
-
-def create_interactive_pca_plot(pca_ref, data_x, data_pca, labels=None, max_points=1000, sampling_method='stratified'):
+          
+def create_interactive_pca_plot(pca_ref, data_x, data_pca, labels=None):
     """Crée un graphique interactif Plotly avec images au survol et couleurs par classe.
     
     Args:
@@ -147,41 +101,12 @@ def create_interactive_pca_plot(pca_ref, data_x, data_pca, labels=None, max_poin
         data_x: Images originales
         data_pca: Données transformées par PCA
         labels: Labels des classes (optionnel)
-        max_points: Nombre maximum de points à afficher (défaut: 1000)
-        sampling_method: Méthode d'échantillonnage ('random', 'stratified', 'first')
+    
     """
     original_size = len(data_x)
     
-    # Échantillonnage si nécessaire
-    if max_points is not None and len(data_x) > max_points:
-        print(f"🎯 Échantillonnage: {max_points} points sur {original_size} disponibles")
-        
-        if sampling_method == 'random':
-            # Échantillonnage aléatoire
-            indices = np.random.choice(len(data_x), max_points, replace=False)
-        elif sampling_method == 'stratified' and labels is not None:
-            # Échantillonnage stratifié par classe
-            indices = stratified_sampling(labels, max_points)
-        elif sampling_method == 'first':
-            # Prendre les premiers échantillons
-            indices = np.arange(min(max_points, len(data_x)))
-        else:
-            # Fallback sur aléatoire
-            indices = np.random.choice(len(data_x), max_points, replace=False)
-        
-        # Appliquer l'échantillonnage
-        data_x = data_x[indices]
-        data_pca = data_pca[indices]
-        if labels is not None:
-            if isinstance(labels, (list, tuple)):
-                labels = [labels[i] for i in indices]
-            else:
-                labels = labels[indices]
-        
-        print(f"✅ Méthode d'échantillonnage: {sampling_method}")
-    else:
-        indices = np.arange(len(data_x))
-        print(f"📊 Affichage de tous les {len(data_x)} points")
+    indices = np.arange(len(data_x))
+    print(f"📊 Affichage de tous les {len(data_x)} points")
     
     explained_variance_ratio = pca_ref.explained_variance_ratio_
     
@@ -317,49 +242,6 @@ def create_interactive_pca_plot(pca_ref, data_x, data_pca, labels=None, max_poin
         for label, count in label_counts.items():
             percentage = (count / len(labels)) * 100
             print(f"  🏷️  {label}: {count} images ({percentage:.1f}%)")
-        
-        if max_points is not None and original_size > max_points:
-            print(f"\n💡 Note: Statistiques basées sur l'échantillon de {len(data_pca)} points sur {original_size} total")
-        
+
     print("\n✅ Visualisations interactives créées avec couleurs par classe !")
     print("\n💡 Survolez les points pour voir les détails de chaque image\n")
-
-
-def stratified_sampling(labels, max_samples):
-    """Effectue un échantillonnage stratifié pour maintenir les proportions des classes."""
-    if isinstance(labels, (list, tuple)):
-        labels = np.array(labels)
-    
-    unique_labels, label_counts = np.unique(labels, return_counts=True)
-    proportions = label_counts / len(labels)
-    
-    indices = []
-    for label, prop in zip(unique_labels, proportions):
-        n_samples_class = max(1, int(max_samples * prop))  # Au moins 1 échantillon par classe
-        class_indices = np.where(labels == label)[0]
-        
-        if len(class_indices) <= n_samples_class:
-            # Prendre tous les échantillons de cette classe
-            indices.extend(class_indices)
-        else:
-            # Échantillonnage aléatoire dans cette classe
-            sampled_indices = np.random.choice(class_indices, n_samples_class, replace=False)
-            indices.extend(sampled_indices)
-    
-    return np.array(indices)[:max_samples]  # S'assurer qu'on ne dépasse pas max_samples
-
-
-# Fonctions de commodité pour différents cas d'usage
-def create_fast_pca_plot(pca_ref, data_x, data_pca, labels=None):
-    """Version rapide avec 500 points maximum."""
-    return create_interactive_pca_plot(pca_ref, data_x, data_pca, labels, max_points=500)
-
-
-def create_detailed_pca_plot(pca_ref, data_x, data_pca, labels=None):
-    """Version détaillée avec 2000 points maximum."""
-    return create_interactive_pca_plot(pca_ref, data_x, data_pca, labels, max_points=2000)
-
-
-def create_full_pca_plot(pca_ref, data_x, data_pca, labels=None):
-    """Version complète sans limitation de points (attention aux performances)."""
-    return create_interactive_pca_plot(pca_ref, data_x, data_pca, labels, max_points=None)
