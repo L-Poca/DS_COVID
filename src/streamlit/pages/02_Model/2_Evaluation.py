@@ -28,8 +28,15 @@ sys.path.append(str(project_root))
 
 try:
     from src.features.Pipelines.Pipeline_Sklearn import PipelineManager
-except ImportError:
-    st.error("❌ Impossible d'importer PipelineManager. Vérifiez le chemin d'accès.")
+    from src.features.Pipelines.Pipeline_TensorFlow import TensorFlowPipelineManager
+    from src.features.Pipelines.Pipeline_DataAugmentation import DataAugmentationPipeline
+    from src.features.Data_Loaders.covid_data_loader import (
+        load_covid_dataset, prepare_data_for_sklearn, prepare_data_for_tensorflow,
+        get_data_paths, check_data_availability
+    )
+except ImportError as e:
+    st.error(f"❌ Erreur d'importation: {e}")
+    st.info("Certaines fonctionnalités peuvent ne pas être disponibles.")
 
 st.title("📊 Évaluation des Modèles")
 

@@ -1,0 +1,39 @@
+{
+  "name": "Full TensorFlow Deep Learning Pipeline",
+  "description": "Pipeline complet utilisant TensorFlow pour l'augmentation et la classification",
+  "version": "1.0",
+  "type": "simple",
+  "steps": [
+    {
+      "name": "loader",
+      "class": "ImageLoader",
+      "params": {
+        "img_size": [224, 224]
+      }
+    },
+    {
+      "name": "tensorflow_augmenter",
+      "class": "TensorFlowDataAugmenter",
+      "params": {
+        "rotation_range": 0.3,
+        "width_shift_range": 0.2,
+        "height_shift_range": 0.2,
+        "zoom_range": 0.2,
+        "horizontal_flip": true,
+        "brightness_range": [0.7, 1.3],
+        "apply_augmentation": true
+      }
+    },
+    {
+      "name": "keras_classifier",
+      "class": "KerasClassifier",
+      "params": {
+        "epochs": 50,
+        "batch_size": 32,
+        "validation_split": 0.2,
+        "verbose": 1,
+        "input_shape": [224, 224, 3]
+      }
+    }
+  ]
+}

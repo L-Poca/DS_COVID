@@ -1,0 +1,47 @@
+{
+  "name": "Deep Learning Pipeline with TensorFlow",
+  "description": "Pipeline utilisant des transformateurs TensorFlow pour l'extraction de caractéristiques et la classification",
+  "version": "1.0",
+  "type": "simple",
+  "steps": [
+    {
+      "name": "loader",
+      "class": "ImageLoader",
+      "params": {
+        "img_size": [224, 224]
+      }
+    },
+    {
+      "name": "tensorflow_augmenter",
+      "class": "TensorFlowDataAugmenter",
+      "params": {
+        "rotation_range": 0.2,
+        "width_shift_range": 0.1,
+        "height_shift_range": 0.1,
+        "zoom_range": 0.1,
+        "horizontal_flip": true,
+        "brightness_range": [0.8, 1.2],
+        "apply_augmentation": true
+      }
+    },
+    {
+      "name": "feature_extractor",
+      "class": "TensorFlowFeatureExtractor",
+      "params": {
+        "model_name": "VGG16",
+        "include_top": false,
+        "pooling": "avg",
+        "input_shape": [224, 224, 1],
+        "trainable": false
+      }
+    },
+    {
+      "name": "classifier",
+      "class": "LogisticRegression",
+      "params": {
+        "max_iter": 1000,
+        "random_state": 42
+      }
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "name": "pipeline_augmented",
+  "description": "Pipeline avec augmentation de données et masquage",
+  "steps": [
+    {
+      "name": "img_loader",
+      "class": "ImageLoader",
+      "params": {}
+    },
+    {
+      "name": "img_resizer",
+      "class": "ImageResizer",
+      "params": { "img_size": [256, 256] }
+    },
+    {
+      "name": "img_normalizer",
+      "class": "ImageNormalizer",
+      "params": {}
+    },
+    {
+      "name": "img_augmenter",
+      "class": "ImageAugmenter",
+      "params": {}
+    },
+    {
+      "name": "img_masker",
+      "class": "ImageMasker",
+      "params": { "mask_paths": "masks" }
+    },
+    {
+      "name": "img_flatten",
+      "class": "ImageFlattener",
+      "params": {}
+    },
+    {
+      "name": "img_standard_scaler",
+      "class": "ImageStandardScaler",
+      "params": {}
+    },
+    {
+      "name": "clf",
+      "class": "LogisticRegression",
+      "params": { "max_iter": 200, "verbose": 2, "random_state": 42 }
+    }
+  ]
+}

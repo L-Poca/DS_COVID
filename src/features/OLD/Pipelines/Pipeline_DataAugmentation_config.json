@@ -1,0 +1,317 @@
+{
+  "default_settings": {
+    "random_state": 42,
+    "target_size": [256, 256],
+    "batch_size": 32,
+    "color_mode": "grayscale",
+    "class_mapping": {
+      "COVID": "COVID",
+      "Normal": "Normal",
+      "Lung_Opacity": "Lung_Opacity", 
+      "Viral_Pneumonia": "Viral Pneumonia"
+    },
+    "preserve_originals": true,
+    "output_format": "png",
+    "quality": 95
+  },
+  
+  "augmentation_strategies": {
+    "basic_geometric": {
+      "name": "Augmentations Géométriques de Base",
+      "description": "Rotations, flips et translations simples pour augmentation rapide",
+      "type": "keras",
+      "target_count": 2000,
+      "params": {
+        "rotation_range": 15,
+        "width_shift_range": 0.1,
+        "height_shift_range": 0.1,
+        "horizontal_flip": true,
+        "vertical_flip": false,
+        "fill_mode": "nearest",
+        "zoom_range": 0.1
+      }
+    },
+    
+    "medical_basic": {
+      "name": "Augmentations Médicales de Base",
+      "description": "Augmentations adaptées aux images radiographiques",
+      "type": "keras",
+      "target_count": 3000,
+      "params": {
+        "rotation_range": 10,
+        "width_shift_range": 0.05,
+        "height_shift_range": 0.05,
+        "shear_range": 0.05,
+        "zoom_range": [0.95, 1.05],
+        "horizontal_flip": true,
+        "vertical_flip": false,
+        "brightness_range": [0.9, 1.1],
+        "fill_mode": "constant",
+        "cval": 0.0
+      }
+    },
+    
+    "advanced_medical": {
+      "name": "Augmentations Médicales Avancées",
+      "description": "Augmentations spécialisées avec améliorations de contraste",
+      "type": "custom_medical",
+      "target_count": 4000,
+      "params": {
+        "rotation_range": 12,
+        "width_shift_range": 0.08,
+        "height_shift_range": 0.08,
+        "zoom_range": [0.92, 1.08],
+        "horizontal_flip": true,
+        "clahe": true,
+        "clahe_clip_limit": 2.0,
+        "clahe_grid_size": [8, 8],
+        "histogram_equalization": false,
+        "denoise": true,
+        "denoise_h": 8,
+        "denoise_template_window_size": 7,
+        "denoise_search_window_size": 21
+      }
+    },
+    
+    "albumentations_comprehensive": {
+      "name": "Augmentations Complètes (Albumentations)",
+      "description": "Suite complète d'augmentations avec Albumentations pour diversité maximale",
+      "type": "albumentations",
+      "target_count": 5000,
+      "params": {
+        "rotation_range": 20,
+        "rotation_prob": 0.7,
+        "horizontal_flip": true,
+        "horizontal_flip_prob": 0.5,
+        "vertical_flip": false,
+        "brightness_contrast": true,
+        "brightness_limit": 0.15,
+        "contrast_limit": 0.15,
+        "brightness_contrast_prob": 0.6,
+        "gaussian_noise": true,
+        "noise_var_limit": [10, 30],
+        "noise_prob": 0.4,
+        "gaussian_blur": true,
+        "blur_limit": [1, 3],
+        "blur_prob": 0.3,
+        "elastic_transform": true,
+        "elastic_alpha": 1,
+        "elastic_sigma": 50,
+        "elastic_alpha_affine": 30,
+        "elastic_prob": 0.3
+      }
+    },
+    
+    "covid_specific": {
+      "name": "Spécialisé COVID-19",
+      "description": "Optimisé pour les caractéristiques spécifiques des images COVID",
+      "type": "keras",
+      "target_count": 3500,
+      "params": {
+        "rotation_range": 8,
+        "width_shift_range": 0.06,
+        "height_shift_range": 0.06,
+        "shear_range": 0.03,
+        "zoom_range": [0.96, 1.04],
+        "horizontal_flip": true,
+        "brightness_range": [0.92, 1.08],
+        "channel_shift_range": 0.1,
+        "fill_mode": "reflect"
+      }
+    },
+    
+    "pneumonia_optimized": {
+      "name": "Optimisé Pneumonie",
+      "description": "Paramètres ajustés pour les images de pneumonie virale",
+      "type": "keras", 
+      "target_count": 3200,
+      "params": {
+        "rotation_range": 12,
+        "width_shift_range": 0.07,
+        "height_shift_range": 0.07,
+        "shear_range": 0.04,
+        "zoom_range": 0.08,
+        "horizontal_flip": true,
+        "brightness_range": [0.88, 1.12],
+        "fill_mode": "nearest"
+      }
+    },
+    
+    "lung_opacity_focused": {
+      "name": "Ciblé Opacité Pulmonaire",
+      "description": "Spécialement conçu pour les images d'opacité pulmonaire",
+      "type": "albumentations",
+      "target_count": 3300,
+      "params": {
+        "rotation_range": 15,
+        "rotation_prob": 0.6,
+        "horizontal_flip": true,
+        "horizontal_flip_prob": 0.5,
+        "brightness_contrast": true,
+        "brightness_limit": 0.2,
+        "contrast_limit": 0.25,
+        "brightness_contrast_prob": 0.7,
+        "gaussian_noise": true,
+        "noise_var_limit": [5, 25],
+        "noise_prob": 0.35,
+        "gaussian_blur": false
+      }
+    },
+    
+    "balanced_medical": {
+      "name": "Équilibrage Médical",
+      "description": "Configuration équilibrée pour toutes les classes médicales",
+      "type": "keras",
+      "target_count": 4000,
+      "params": {
+        "rotation_range": 10,
+        "width_shift_range": 0.06,
+        "height_shift_range": 0.06,
+        "shear_range": 0.03,
+        "zoom_range": 0.06,
+        "horizontal_flip": true,
+        "vertical_flip": false,
+        "brightness_range": [0.93, 1.07],
+        "fill_mode": "constant",
+        "cval": 0.0
+      }
+    },
+    
+    "heavy_augmentation": {
+      "name": "Augmentation Intensive",
+      "description": "Augmentations agressives pour datasets très limités",
+      "type": "albumentations",
+      "target_count": 8000,
+      "params": {
+        "rotation_range": 25,
+        "rotation_prob": 0.8,
+        "horizontal_flip": true,
+        "horizontal_flip_prob": 0.5,
+        "vertical_flip": true,
+        "vertical_flip_prob": 0.3,
+        "brightness_contrast": true,
+        "brightness_limit": 0.25,
+        "contrast_limit": 0.3,
+        "brightness_contrast_prob": 0.8,
+        "gaussian_noise": true,
+        "noise_var_limit": [10, 50],
+        "noise_prob": 0.5,
+        "gaussian_blur": true,
+        "blur_limit": [1, 5],
+        "blur_prob": 0.4,
+        "elastic_transform": true,
+        "elastic_alpha": 2,
+        "elastic_sigma": 30,
+        "elastic_alpha_affine": 50,
+        "elastic_prob": 0.4
+      }
+    },
+    
+    "conservative_medical": {
+      "name": "Médical Conservateur",
+      "description": "Augmentations subtiles préservant l'intégrité médicale",
+      "type": "custom_medical",
+      "target_count": 2500,
+      "params": {
+        "rotation_range": 5,
+        "width_shift_range": 0.03,
+        "height_shift_range": 0.03,
+        "zoom_range": [0.98, 1.02],
+        "horizontal_flip": true,
+        "clahe": true,
+        "clahe_clip_limit": 1.5,
+        "clahe_grid_size": [4, 4],
+        "histogram_equalization": true,
+        "denoise": false
+      }
+    },
+    
+    "test_preview": {
+      "name": "Test et Aperçu",
+      "description": "Configuration légère pour tests et aperçus rapides",
+      "type": "keras",
+      "target_count": 200,
+      "params": {
+        "rotation_range": 20,
+        "width_shift_range": 0.1,
+        "height_shift_range": 0.1,
+        "horizontal_flip": true,
+        "zoom_range": 0.15,
+        "brightness_range": [0.8, 1.2],
+        "fill_mode": "nearest"
+      }
+    }
+  },
+  
+  "quality_control": {
+    "min_image_size": [64, 64],
+    "max_image_size": [2048, 2048],
+    "allowed_formats": ["png", "jpg", "jpeg", "bmp", "tiff"],
+    "check_corruption": true,
+    "verify_medical_standards": true,
+    "preserve_aspect_ratio": false
+  },
+  
+  "output_settings": {
+    "create_subdirectories": true,
+    "subdirectory_structure": "by_class",
+    "filename_pattern": "{original_name}_aug_{index:03d}",
+    "include_metadata": true,
+    "save_augmentation_log": true,
+    "generate_preview_grid": true,
+    "preview_samples": 9
+  },
+  
+  "performance_settings": {
+    "parallel_processing": true,
+    "max_workers": 4,
+    "chunk_size": 100,
+    "memory_limit_mb": 4096,
+    "use_gpu_acceleration": false,
+    "cache_generators": true
+  },
+  
+  "validation_settings": {
+    "validate_before_processing": true,
+    "check_image_integrity": true,
+    "verify_class_balance": true,
+    "minimum_samples_per_class": 100,
+    "maximum_samples_per_class": 10000,
+    "balance_tolerance": 0.2
+  },
+  
+  "medical_specific": {
+    "preserve_medical_metadata": true,
+    "dicom_support": false,
+    "anonymize_data": true,
+    "maintain_radiological_orientation": true,
+    "enhance_lung_features": {
+      "enable": true,
+      "contrast_enhancement": 1.2,
+      "edge_preservation": true
+    },
+    "covid_pattern_preservation": {
+      "enable": true,
+      "ground_glass_opacity_enhancement": true,
+      "consolidation_pattern_preservation": true
+    }
+  },
+  
+  "reporting": {
+    "generate_html_report": true,
+    "include_statistics": true,
+    "include_sample_images": true,
+    "include_processing_time": true,
+    "include_quality_metrics": true,
+    "export_formats": ["csv", "json", "html"],
+    "auto_save_config": true
+  },
+  
+  "experimental_features": {
+    "enable_gan_augmentation": false,
+    "style_transfer_augmentation": false,
+    "synthetic_data_generation": false,
+    "advanced_noise_simulation": false,
+    "anatomical_variation_simulation": false
+  }
+}

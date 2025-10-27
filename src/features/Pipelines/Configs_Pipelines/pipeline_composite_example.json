@@ -1,0 +1,34 @@
+{
+  "name": "pipeline_composite_example",
+  "description": "Pipeline composite utilisant d'autres pipelines comme sous-étapes",
+  "type": "composite",
+  "steps": [
+    {
+      "name": "preprocessing",
+      "type": "pipeline",
+      "pipeline_file": "../../src/features/Pipelines/Configs_Pipelines/pipeline_simple.json",
+      "exclude_steps": ["clf", "img_flatten"]
+    },
+    {
+      "name": "visualize",
+      "class": "VisualizeTransformer",
+      "params": { "n_samples": 3, "prefix": "composite", "save_dir": "outputs/composite" }
+    },
+    {
+      "name": "img_flatten",
+      "class": "ImageFlattener",
+      "params": {}
+    },
+    {
+      "name": "feature_engineering",
+      "type": "pipeline", 
+      "pipeline_file": "../../src/features/Pipelines/Configs_Pipelines/pipeline_feature_engineering.json",
+      "include_steps": ["img_histogram", "img_pca"]
+    },
+    {
+      "name": "clf",
+      "class": "LogisticRegression",
+      "params": { "max_iter": 300, "verbose": 2, "random_state": 42 }
+    }
+  ]
+}

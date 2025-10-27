@@ -1,0 +1,43 @@
+{
+  "name": "Transfer Learning Pipeline",
+  "description": "Pipeline utilisant le transfer learning avec un modèle pré-entraîné",
+  "version": "1.0",
+  "type": "simple",
+  "steps": [
+    {
+      "name": "loader",
+      "class": "ImageLoader",
+      "params": {
+        "img_size": [224, 224]
+      }
+    },
+    {
+      "name": "tensorflow_augmenter",
+      "class": "TensorFlowDataAugmenter",
+      "params": {
+        "rotation_range": 0.2,
+        "width_shift_range": 0.1,
+        "height_shift_range": 0.1,
+        "zoom_range": 0.1,
+        "horizontal_flip": true,
+        "brightness_range": [0.9, 1.1],
+        "apply_augmentation": true
+      }
+    },
+    {
+      "name": "transfer_learning_classifier",
+      "class": "TransferLearningClassifier",
+      "params": {
+        "base_model_name": "ResNet50",
+        "freeze_base": true,
+        "dense_layers": [256, 128],
+        "dropout_rate": 0.5,
+        "epochs": 30,
+        "batch_size": 16,
+        "validation_split": 0.2,
+        "verbose": 1,
+        "input_shape": [224, 224, 3]
+      }
+    }
+  ]
+}

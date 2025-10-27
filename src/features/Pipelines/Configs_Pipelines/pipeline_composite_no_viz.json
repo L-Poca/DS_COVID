@@ -1,0 +1,24 @@
+{
+  "name": "pipeline_composite_no_viz",
+  "description": "Pipeline composite sans visualisation (plus rapide pour les tests)",
+  "type": "composite",
+  "steps": [
+    {
+      "name": "preprocessing",
+      "type": "pipeline",
+      "pipeline_file": "../../src/features/Pipelines/Configs_Pipelines/pipeline_simple.json",
+      "exclude_steps": ["clf"]
+    },
+    {
+      "name": "feature_engineering",
+      "type": "pipeline", 
+      "pipeline_file": "../../src/features/Pipelines/Configs_Pipelines/pipeline_feature_engineering.json",
+      "include_steps": ["img_histogram", "img_pca"]
+    },
+    {
+      "name": "clf",
+      "class": "LogisticRegression",
+      "params": { "max_iter": 300, "verbose": 2, "random_state": 42 }
+    }
+  ]
+}

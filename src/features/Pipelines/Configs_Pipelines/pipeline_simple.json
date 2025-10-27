@@ -1,0 +1,31 @@
+{
+  "name": "pipeline_simple",
+  "description": "Pipeline simple pour classification rapide",
+  "steps": [
+    {
+      "name": "img_loader",
+      "class": "ImageLoader",
+      "params": {}
+    },
+    {
+      "name": "img_resizer",
+      "class": "ImageResizer",
+      "params": { "img_size": [256, 256] }
+    },
+    {
+      "name": "img_normalizer",
+      "class": "ImageNormalizer",
+      "params": {}
+    },
+    {
+      "name": "img_flatten",
+      "class": "ImageFlattener",
+      "params": {}
+    },
+    {
+      "name": "clf",
+      "class": "LogisticRegression",
+      "params": { "max_iter": 100, "verbose": 1, "random_state": 42 }
+    }
+  ]
+}

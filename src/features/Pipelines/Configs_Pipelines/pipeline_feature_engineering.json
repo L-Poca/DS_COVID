@@ -1,0 +1,41 @@
+{
+  "name": "pipeline_feature_engineering",
+  "description": "Pipeline avec feature engineering avancé (histogrammes, PCA)",
+  "steps": [
+    {
+      "name": "img_loader",
+      "class": "ImageLoader",
+      "params": {}
+    },
+    {
+      "name": "img_resizer",
+      "class": "ImageResizer",
+      "params": { "img_size": [256, 256] }
+    },
+    {
+      "name": "img_normalizer",
+      "class": "ImageNormalizer",
+      "params": {}
+    },
+    {
+      "name": "img_masker",
+      "class": "ImageMasker",
+      "params": { "mask_paths": "masks" }
+    },
+    {
+      "name": "img_flatten",
+      "class": "ImageFlattener",
+      "params": {}
+    },
+    {
+      "name": "img_pca",
+      "class": "ImagePCA",
+      "params": { "n_components": 100 }
+    },
+    {
+      "name": "clf",
+      "class": "LogisticRegression",
+      "params": { "max_iter": 150, "verbose": 2, "random_state": 42 }
+    }
+  ]
+}

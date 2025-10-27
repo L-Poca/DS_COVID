@@ -1,0 +1,651 @@
+{
+  "default_data_settings": {
+    "target_size": [224, 224],
+    "batch_size": 32,
+    "class_mode": "categorical",
+    "color_mode": "rgb",
+    "rotation_range": 15,
+    "width_shift_range": 0.1,
+    "height_shift_range": 0.1,
+    "shear_range": 0.1,
+    "zoom_range": 0.1,
+    "horizontal_flip": true,
+    "fill_mode": "nearest",
+    "validation_split": 0.2,
+    "compute_class_weights": true
+  },
+  
+  "model_configs": {
+    "basic_cnn": {
+      "name": "CNN Basique",
+      "description": "Réseau de neurones convolutionnel simple pour classification COVID-19",
+      "architecture_type": "custom_cnn",
+      "architecture_params": {
+        "input_shape": [224, 224, 3],
+        "num_classes": 4,
+        "rescaling": true,
+        "data_augmentation": false,
+        "conv_blocks": [
+          {"filters": 32, "kernel_size": 3, "pool_size": 2},
+          {"filters": 64, "kernel_size": 3, "pool_size": 2},
+          {"filters": 128, "kernel_size": 3, "pool_size": 2}
+        ],
+        "dense_layers": [512, 256],
+        "activation": "relu",
+        "batch_normalization": true,
+        "conv_dropout": 0.25,
+        "dense_dropout": 0.5
+      },
+      "compile_config": {
+        "optimizer": "adam",
+        "learning_rate": 0.001,
+        "loss": "categorical_crossentropy"
+      },
+      "training_config": {
+        "epochs": 50,
+        "save_best_model": true,
+        "early_stopping": true,
+        "patience": 10,
+        "reduce_lr": true,
+        "lr_factor": 0.2,
+        "lr_patience": 5,
+        "min_lr": 1e-7,
+        "tensorboard": false
+      },
+      "data_config": {
+        "target_size": [224, 224],
+        "batch_size": 32,
+        "rotation_range": 15,
+        "zoom_range": 0.1,
+        "horizontal_flip": true
+      }
+    },
+    
+    "advanced_cnn": {
+      "name": "CNN Avancé",
+      "description": "Architecture CNN plus profonde avec régularisation avancée",
+      "architecture_type": "custom_cnn",
+      "architecture_params": {
+        "input_shape": [224, 224, 3],
+        "num_classes": 4,
+        "rescaling": true,
+        "data_augmentation": true,
+        "conv_blocks": [
+          {"filters": 32, "kernel_size": 3, "pool_size": 2},
+          {"filters": 64, "kernel_size": 3, "pool_size": 2},
+          {"filters": 128, "kernel_size": 3, "pool_size": 2},
+          {"filters": 256, "kernel_size": 3, "pool_size": 2},
+          {"filters": 512, "kernel_size": 3, "pool_size": null}
+        ],
+        "dense_layers": [1024, 512, 256],
+        "activation": "relu",
+        "batch_normalization": true,
+        "conv_dropout": 0.3,
+        "dense_dropout": 0.5
+      },
+      "compile_config": {
+        "optimizer": "adam",
+        "learning_rate": 0.0001,
+        "loss": "categorical_crossentropy"
+      },
+      "training_config": {
+        "epochs": 100,
+        "save_best_model": true,
+        "early_stopping": true,
+        "patience": 15,
+        "reduce_lr": true,
+        "lr_factor": 0.1,
+        "lr_patience": 7,
+        "min_lr": 1e-8,
+        "tensorboard": true
+      },
+      "data_config": {
+        "target_size": [224, 224],
+        "batch_size": 16,
+        "rotation_range": 20,
+        "width_shift_range": 0.2,
+        "height_shift_range": 0.2,
+        "zoom_range": 0.2,
+        "horizontal_flip": true,
+        "shear_range": 0.1
+      }
+    },
+    
+    "vgg16_transfer": {
+      "name": "VGG16 Transfer Learning",
+      "description": "Transfer learning avec VGG16 pré-entraîné sur ImageNet",
+      "architecture_type": "transfer_learning",
+      "architecture_params": {
+        "base_model": "VGG16",
+        "input_shape": [224, 224, 3],
+        "num_classes": 4,
+        "fine_tuning": false,
+        "freeze_layers": 15,
+        "rescaling": true,
+        "data_augmentation": false,
+        "global_pooling": "avg",
+        "dense_layers": [256, 128],
+        "dropout": 0.5,
+        "dense_dropout": 0.3
+      },
+      "compile_config": {
+        "optimizer": "adam",
+        "learning_rate": 0.0001,
+        "loss": "categorical_crossentropy"
+      },
+      "training_config": {
+        "epochs": 50,
+        "save_best_model": true,
+        "early_stopping": true,
+        "patience": 10,
+        "reduce_lr": true,
+        "lr_factor": 0.2,
+        "lr_patience": 5,
+        "tensorboard": true
+      },
+      "data_config": {
+        "target_size": [224, 224],
+        "batch_size": 32,
+        "rotation_range": 10,
+        "zoom_range": 0.1,
+        "horizontal_flip": true
+      }
+    },
+    
+    "resnet50_finetuned": {
+      "name": "ResNet50 Fine-tuned",
+      "description": "ResNet50 avec fine-tuning pour images médicales",
+      "architecture_type": "transfer_learning",
+      "architecture_params": {
+        "base_model": "ResNet50",
+        "input_shape": [224, 224, 3],
+        "num_classes": 4,
+        "fine_tuning": true,
+        "freeze_layers": 100,
+        "rescaling": true,
+        "data_augmentation": true,
+        "global_pooling": "avg",
+        "dense_layers": [512, 256],
+        "dropout": 0.4,
+        "dense_dropout": 0.4
+      },
+      "compile_config": {
+        "optimizer": "adam",
+        "learning_rate": 1e-5,
+        "loss": "categorical_crossentropy"
+      },
+      "training_config": {
+        "epochs": 75,
+        "save_best_model": true,
+        "early_stopping": true,
+        "patience": 12,
+        "reduce_lr": true,
+        "lr_factor": 0.1,
+        "lr_patience": 6,
+        "tensorboard": true
+      },
+      "data_config": {
+        "target_size": [224, 224],
+        "batch_size": 16,
+        "rotation_range": 15,
+        "width_shift_range": 0.15,
+        "height_shift_range": 0.15,
+        "zoom_range": 0.15,
+        "horizontal_flip": true
+      }
+    },
+    
+    "efficientnet_medical": {
+      "name": "EfficientNet Médical",
+      "description": "EfficientNetB0 optimisé pour images radiographiques",
+      "architecture_type": "transfer_learning",
+      "architecture_params": {
+        "base_model": "EfficientNetB0",
+        "input_shape": [224, 224, 3],
+        "num_classes": 4,
+        "fine_tuning": true,
+        "freeze_layers": 150,
+        "rescaling": false,
+        "data_augmentation": false,
+        "global_pooling": "avg",
+        "dense_layers": [256],
+        "dropout": 0.3,
+        "dense_dropout": 0.2
+      },
+      "compile_config": {
+        "optimizer": "adamax",
+        "learning_rate": 0.0001,
+        "loss": "categorical_crossentropy"
+      },
+      "training_config": {
+        "epochs": 60,
+        "save_best_model": true,
+        "early_stopping": true,
+        "patience": 8,
+        "reduce_lr": true,
+        "lr_factor": 0.2,
+        "lr_patience": 4,
+        "tensorboard": true
+      },
+      "data_config": {
+        "target_size": [224, 224],
+        "batch_size": 24,
+        "rotation_range": 12,
+        "zoom_range": 0.08,
+        "horizontal_flip": true,
+        "width_shift_range": 0.1,
+        "height_shift_range": 0.1
+      }
+    },
+    
+    "densenet_covid": {
+      "name": "DenseNet COVID Spécialisé",
+      "description": "DenseNet121 spécialement configuré pour la détection COVID",
+      "architecture_type": "transfer_learning",
+      "architecture_params": {
+        "base_model": "DenseNet121",
+        "input_shape": [224, 224, 3],
+        "num_classes": 4,
+        "fine_tuning": true,
+        "freeze_layers": 200,
+        "rescaling": true,
+        "data_augmentation": false,
+        "global_pooling": "avg",
+        "dense_layers": [512, 256, 128],
+        "dropout": 0.5,
+        "dense_dropout": 0.4
+      },
+      "compile_config": {
+        "optimizer": "rmsprop",
+        "learning_rate": 5e-5,
+        "loss": "categorical_crossentropy"
+      },
+      "training_config": {
+        "epochs": 80,
+        "save_best_model": true,
+        "early_stopping": true,
+        "patience": 15,
+        "reduce_lr": true,
+        "lr_factor": 0.1,
+        "lr_patience": 8,
+        "tensorboard": true
+      },
+      "data_config": {
+        "target_size": [224, 224],
+        "batch_size": 20,
+        "rotation_range": 8,
+        "zoom_range": 0.05,
+        "horizontal_flip": true,
+        "brightness_range": [0.95, 1.05]
+      }
+    },
+    
+    "mobilenet_lightweight": {
+      "name": "MobileNet Léger",
+      "description": "MobileNetV2 pour déploiement mobile/edge computing",
+      "architecture_type": "transfer_learning",
+      "architecture_params": {
+        "base_model": "MobileNetV2",
+        "input_shape": [224, 224, 3],
+        "num_classes": 4,
+        "fine_tuning": false,
+        "freeze_layers": 100,
+        "rescaling": true,
+        "data_augmentation": true,
+        "global_pooling": "avg",
+        "dense_layers": [128],
+        "dropout": 0.2,
+        "dense_dropout": 0.2
+      },
+      "compile_config": {
+        "optimizer": "adam",
+        "learning_rate": 0.001,
+        "loss": "categorical_crossentropy"
+      },
+      "training_config": {
+        "epochs": 40,
+        "save_best_model": true,
+        "early_stopping": true,
+        "patience": 8,
+        "reduce_lr": true,
+        "lr_factor": 0.3,
+        "lr_patience": 4,
+        "tensorboard": false
+      },
+      "data_config": {
+        "target_size": [224, 224],
+        "batch_size": 64,
+        "rotation_range": 10,
+        "zoom_range": 0.1,
+        "horizontal_flip": true
+      }
+    },
+    
+    "ensemble_voting": {
+      "name": "Ensemble Voting",
+      "description": "Ensemble de modèles avec vote majoritaire",
+      "architecture_type": "ensemble",
+      "architecture_params": {
+        "input_shape": [224, 224, 3],
+        "num_classes": 4,
+        "ensemble_strategy": "average",
+        "base_models": [
+          {
+            "type": "transfer",
+            "base_model": "VGG16",
+            "fine_tuning": false,
+            "global_pooling": "avg",
+            "dense_layers": [256],
+            "dropout": 0.3
+          },
+          {
+            "type": "transfer",
+            "base_model": "ResNet50",
+            "fine_tuning": false,
+            "global_pooling": "avg",
+            "dense_layers": [256],
+            "dropout": 0.3
+          },
+          {
+            "type": "cnn",
+            "conv_blocks": [
+              {"filters": 64, "kernel_size": 3, "pool_size": 2},
+              {"filters": 128, "kernel_size": 3, "pool_size": 2},
+              {"filters": 256, "kernel_size": 3, "pool_size": 2}
+            ],
+            "dense_layers": [256],
+            "batch_normalization": true,
+            "conv_dropout": 0.25,
+            "dense_dropout": 0.3
+          }
+        ]
+      },
+      "compile_config": {
+        "optimizer": "adam",
+        "learning_rate": 0.0001,
+        "loss": "categorical_crossentropy"
+      },
+      "training_config": {
+        "epochs": 30,
+        "save_best_model": true,
+        "early_stopping": true,
+        "patience": 8,
+        "reduce_lr": false,
+        "tensorboard": true
+      },
+      "data_config": {
+        "target_size": [224, 224],
+        "batch_size": 16,
+        "rotation_range": 10,
+        "zoom_range": 0.1,
+        "horizontal_flip": true
+      }
+    },
+    
+    "binary_covid_detector": {
+      "name": "Détecteur Binaire COVID",
+      "description": "Classification binaire COVID vs Non-COVID",
+      "architecture_type": "transfer_learning",
+      "architecture_params": {
+        "base_model": "VGG16",
+        "input_shape": [224, 224, 3],
+        "num_classes": 2,
+        "fine_tuning": true,
+        "freeze_layers": 10,
+        "rescaling": true,
+        "data_augmentation": false,
+        "global_pooling": "avg",
+        "dense_layers": [512, 256],
+        "dropout": 0.5,
+        "dense_dropout": 0.4
+      },
+      "compile_config": {
+        "optimizer": "adam",
+        "learning_rate": 1e-4,
+        "loss": "binary_crossentropy"
+      },
+      "training_config": {
+        "epochs": 50,
+        "save_best_model": true,
+        "early_stopping": true,
+        "patience": 10,
+        "reduce_lr": true,
+        "lr_factor": 0.2,
+        "lr_patience": 5,
+        "tensorboard": true
+      },
+      "data_config": {
+        "target_size": [224, 224],
+        "batch_size": 32,
+        "class_mode": "binary",
+        "rotation_range": 15,
+        "zoom_range": 0.1,
+        "horizontal_flip": true
+      }
+    },
+    
+    "high_resolution_cnn": {
+      "name": "CNN Haute Résolution",
+      "description": "Modèle pour images haute résolution (512x512)",
+      "architecture_type": "custom_cnn",
+      "architecture_params": {
+        "input_shape": [512, 512, 1],
+        "num_classes": 4,
+        "rescaling": true,
+        "data_augmentation": false,
+        "conv_blocks": [
+          {"filters": 32, "kernel_size": 7, "pool_size": 4},
+          {"filters": 64, "kernel_size": 5, "pool_size": 2},
+          {"filters": 128, "kernel_size": 3, "pool_size": 2},
+          {"filters": 256, "kernel_size": 3, "pool_size": 2},
+          {"filters": 512, "kernel_size": 3, "pool_size": 2}
+        ],
+        "dense_layers": [1024, 512],
+        "activation": "relu",
+        "batch_normalization": true,
+        "conv_dropout": 0.3,
+        "dense_dropout": 0.5
+      },
+      "compile_config": {
+        "optimizer": "adam",
+        "learning_rate": 5e-5,
+        "loss": "categorical_crossentropy"
+      },
+      "training_config": {
+        "epochs": 60,
+        "save_best_model": true,
+        "early_stopping": true,
+        "patience": 12,
+        "reduce_lr": true,
+        "lr_factor": 0.1,
+        "lr_patience": 6,
+        "tensorboard": true
+      },
+      "data_config": {
+        "target_size": [512, 512],
+        "batch_size": 8,
+        "color_mode": "grayscale",
+        "rotation_range": 5,
+        "zoom_range": 0.05,
+        "horizontal_flip": true
+      }
+    },
+    
+    "fast_prototype": {
+      "name": "Prototype Rapide",
+      "description": "Modèle léger pour tests et prototypage rapide",
+      "architecture_type": "custom_cnn",
+      "architecture_params": {
+        "input_shape": [128, 128, 3],
+        "num_classes": 4,
+        "rescaling": true,
+        "data_augmentation": false,
+        "conv_blocks": [
+          {"filters": 16, "kernel_size": 3, "pool_size": 2},
+          {"filters": 32, "kernel_size": 3, "pool_size": 2}
+        ],
+        "dense_layers": [64],
+        "activation": "relu",
+        "batch_normalization": false,
+        "conv_dropout": 0.1,
+        "dense_dropout": 0.2
+      },
+      "compile_config": {
+        "optimizer": "adam",
+        "learning_rate": 0.01,
+        "loss": "categorical_crossentropy"
+      },
+      "training_config": {
+        "epochs": 10,
+        "save_best_model": false,
+        "early_stopping": false,
+        "reduce_lr": false,
+        "tensorboard": false
+      },
+      "data_config": {
+        "target_size": [128, 128],
+        "batch_size": 64,
+        "rotation_range": 10,
+        "horizontal_flip": true
+      }
+    }
+  },
+  
+  "model_saving": {
+    "output_directory": "models/tensorflow/",
+    "save_format": "h5",
+    "save_weights_only": false,
+    "include_optimizer": false,
+    "save_traces": true,
+    "naming_convention": "{model_name}_{timestamp}",
+    "create_backup": true,
+    "compress": false
+  },
+  
+  "performance_settings": {
+    "mixed_precision": false,
+    "xla_acceleration": false,
+    "multi_gpu": false,
+    "distribution_strategy": null,
+    "memory_growth": true,
+    "allow_soft_placement": true,
+    "log_device_placement": false
+  },
+  
+  "data_pipeline": {
+    "prefetch_buffer": "AUTOTUNE",
+    "num_parallel_calls": "AUTOTUNE",
+    "cache_dataset": false,
+    "shuffle_buffer_size": 1000,
+    "repeat_dataset": false,
+    "drop_remainder": false
+  },
+  
+  "regularization": {
+    "l1_regularization": 0.0,
+    "l2_regularization": 0.0001,
+    "dropout_schedule": false,
+    "batch_norm_momentum": 0.99,
+    "batch_norm_epsilon": 1e-3,
+    "label_smoothing": 0.0
+  },
+  
+  "augmentation_presets": {
+    "medical_conservative": {
+      "rotation_range": 5,
+      "width_shift_range": 0.05,
+      "height_shift_range": 0.05,
+      "zoom_range": 0.05,
+      "horizontal_flip": true,
+      "vertical_flip": false,
+      "brightness_range": [0.95, 1.05]
+    },
+    "medical_moderate": {
+      "rotation_range": 10,
+      "width_shift_range": 0.1,
+      "height_shift_range": 0.1,
+      "zoom_range": 0.1,
+      "horizontal_flip": true,
+      "vertical_flip": false,
+      "brightness_range": [0.9, 1.1],
+      "shear_range": 0.05
+    },
+    "medical_aggressive": {
+      "rotation_range": 20,
+      "width_shift_range": 0.2,
+      "height_shift_range": 0.2,
+      "zoom_range": 0.2,
+      "horizontal_flip": true,
+      "vertical_flip": true,
+      "brightness_range": [0.8, 1.2],
+      "shear_range": 0.1,
+      "channel_shift_range": 0.1
+    }
+  },
+  
+  "evaluation_metrics": {
+    "classification_metrics": [
+      "accuracy",
+      "precision",
+      "recall",
+      "f1_score",
+      "auc"
+    ],
+    "per_class_metrics": true,
+    "confusion_matrix": true,
+    "classification_report": true,
+    "roc_curves": true,
+    "precision_recall_curves": true
+  },
+  
+  "callbacks_config": {
+    "early_stopping": {
+      "monitor": "val_accuracy",
+      "patience": 10,
+      "restore_best_weights": true,
+      "verbose": 1
+    },
+    "model_checkpoint": {
+      "monitor": "val_accuracy",
+      "save_best_only": true,
+      "save_weights_only": false,
+      "verbose": 1
+    },
+    "reduce_lr_on_plateau": {
+      "monitor": "val_loss",
+      "factor": 0.2,
+      "patience": 5,
+      "min_lr": 1e-7,
+      "verbose": 1
+    },
+    "csv_logger": {
+      "append": true,
+      "separator": ","
+    },
+    "tensorboard": {
+      "write_graph": true,
+      "write_images": false,
+      "histogram_freq": 1,
+      "update_freq": "epoch"
+    }
+  },
+  
+  "medical_specific_settings": {
+    "dicom_support": false,
+    "hu_windowing": false,
+    "lung_segmentation": false,
+    "contrast_enhancement": true,
+    "noise_reduction": false,
+    "anonymization": true,
+    "metadata_preservation": false
+  },
+  
+  "deployment": {
+    "target_platforms": ["tensorflow_serving", "tflite", "tensorflowjs"],
+    "quantization": false,
+    "pruning": false,
+    "optimization_level": "default",
+    "input_signature": true,
+    "batch_inference": true
+  }
+}
