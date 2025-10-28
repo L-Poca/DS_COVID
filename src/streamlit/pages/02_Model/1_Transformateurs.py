@@ -35,6 +35,40 @@ except Exception as e:
 
 
 @st.cache_data(ttl=300)  # Cache pendant 5 minutes
+def scan_custom_transformers_cached() -> Dict[str, Dict]:
+    """Version cachée du scan qui évite les imports problématiques."""
+    if TRANSFORMERS_PATH is None or not TRANSFORMERS_PATH.exists():
+        return {}
+    
+    # Lister seulement les fichiers sans les importer
+    py_files = [f for f in TRANSFORMERS_PATH.glob("*.py") 
+               if not f.name.startswith("__") and f.name != "utilities.py"]
+    
+    # Créer un résumé basique des fichiers
+    files_info = {}
+    for py_file in py_files:
+        try:
+            # Lire le contenu du fichier pour chercher des patterns
+            content = py_file.read_text(encoding='utf-8')
+            
+            # Détecter les classes potentielles
+            import re
+            class_matches = re.findall(r'^class\s+(\w+).*:', content, re.MULTILINE)
+            function_matches = re.findall(r'^def\s+(create_\w+|build_\w+|make_\w+|get_\w+|load_\w+|process_\w+).*:', content, re.MULTILINE)
+            
+            if class_matches or function_matches:
+                files_info[py_file.stem] = {
+                    'file': py_file.name,
+                    'classes': class_matches,
+                    'functions': function_matches,
+                    'size': len(content)
+                }
+        except Exception:
+            continue
+    
+    return files_info
+
+
 def scan_custom_transformers() -> Dict[str, Dict]:
     """Scanne le dossier Transformateurs pour découvrir les transformateurs personnalisés."""
     custom_transformers = {}
@@ -48,24 +82,36 @@ def scan_custom_transformers() -> Dict[str, Dict]:
         st.error(f"❌ Dossier Transformateurs non trouvé: {TRANSFORMERS_PATH}")
         return custom_transformers
     
+    # Essayer d'abord la version cachée pour les infos de base
+    try:
+        cached_info = scan_custom_transformers_cached()
+        if cached_info:
+            st.info(f"ℹ️ Utilisation des informations cachées pour {len(cached_info)} fichiers")
+    except Exception:
+        cached_info = {}
+    
     progress_bar = st.progress(0)
     status_text = st.empty()
     
     try:
         # Lister tous les fichiers Python
         py_files = [f for f in TRANSFORMERS_PATH.glob("*.py") 
-                   if not f.name.startswith("__") and f.name != "utilities.py"]
+                   if not f.name.startswith("__") and f.name != "utilities.py" and f.name != "tensorflow_transformers.py"]
         
         if not py_files:
             st.warning("Aucun fichier Python trouvé dans le dossier Transformateurs")
             return custom_transformers
         
-        # Scanner chaque fichier
+        # Scanner chaque fichier (sauf ceux problématiques)
         for i, py_file in enumerate(py_files):
             progress = (i + 1) / len(py_files)
             progress_bar.progress(progress)
             status_text.text(f"Scan en cours: {py_file.name}")
             
+            # Éviter les fichiers avec imports relatifs problématiques
+            if 'tensorflow_transformers' in py_file.name:
+                continue
+                
             try:
                 # Créer un nom de module unique
                 module_name = f"custom_transformer_{py_file.stem}_{i}"
@@ -78,6 +124,13 @@ def scan_custom_transformers() -> Dict[str, Dict]:
                     # Exécuter le module dans un environnement isolé
                     try:
                         spec.loader.exec_module(module)
+                    except ImportError as import_error:
+                        if "relative import" in str(import_error):
+                            st.warning(f"⚠️ Import relatif ignoré: {py_file.name}")
+                            continue
+                        else:
+                            st.warning(f"⚠️ Erreur d'import pour {py_file.name}: {str(import_error)[:100]}...")
+                            continue
                     except Exception as exec_error:
                         st.warning(f"⚠️ Erreur d'exécution pour {py_file.name}: {str(exec_error)[:100]}...")
                         continue
@@ -123,7 +176,8 @@ def analyze_module_classes(module, py_file) -> Dict[str, Dict]:
                 
                 if is_transformer:
                     found_classes[name] = {
-                        'class': obj,
+                        # Ne pas stocker l'objet class directement (non-sérialisable)
+                        'class_name': obj.__name__,
                         'module': py_file.stem,
                         'file': str(py_file.name),
                         'docstring': clean_docstring(inspect.getdoc(obj)),
@@ -154,7 +208,8 @@ def analyze_module_functions(module, py_file) -> Dict[str, Dict]:
                 
                 try:
                     found_functions[f"📋 {name}"] = {
-                        'function': obj,
+                        # Ne pas stocker l'objet fonction directement (non-sérialisable)
+                        'function_name': name,
                         'module': py_file.stem,
                         'file': str(py_file.name),
                         'docstring': clean_docstring(inspect.getdoc(obj)),
@@ -545,58 +600,58 @@ def show_transformer_details(name: str, info: Dict):
     with st.container():
         # Nom et type
         icon = "🏗️" if info.get('type') == 'class' else "⚙️"
-        st.markdown(f"### {icon} **{name}**")
+        st.markdown(f"#### {icon} **{name}**")
         
         # Description
         if info['docstring'] and info['docstring'] != "Pas de documentation disponible":
-            with st.expander("📖 Description", expanded=False):
-                st.markdown(info['docstring'])
+            st.markdown("**📖 Description:**")
+            st.markdown(f"> {info['docstring']}")
         
         # Paramètres
         if info['parameters']:
-            with st.expander("⚙️ Paramètres", expanded=False):
-                params_data = []
-                for param_name, param_info in info['parameters'].items():
-                    params_data.append({
-                        'Paramètre': param_name,
-                        'Type': param_info['annotation'],
-                        'Défaut': param_info['default']
-                    })
-                
-                if params_data:
-                    params_df = pd.DataFrame(params_data)
-                    st.dataframe(
-                        params_df, 
-                        use_container_width=True, 
-                        hide_index=True,
-                        column_config={
-                            'Paramètre': st.column_config.TextColumn('Paramètre', width='medium'),
-                            'Type': st.column_config.TextColumn('Type', width='medium'),
-                            'Défaut': st.column_config.TextColumn('Valeur par défaut', width='medium')
-                        }
-                    )
+            st.markdown("**⚙️ Paramètres:**")
+            params_data = []
+            for param_name, param_info in info['parameters'].items():
+                params_data.append({
+                    'Paramètre': param_name,
+                    'Type': param_info['annotation'],
+                    'Défaut': param_info['default']
+                })
+            
+            if params_data:
+                params_df = pd.DataFrame(params_data)
+                st.dataframe(
+                    params_df, 
+                    use_container_width=True, 
+                    hide_index=True,
+                    column_config={
+                        'Paramètre': st.column_config.TextColumn('Paramètre', width='medium'),
+                        'Type': st.column_config.TextColumn('Type', width='medium'),
+                        'Défaut': st.column_config.TextColumn('Valeur par défaut', width='medium')
+                    }
+                )
         
         # Méthodes (pour les classes)
         if info.get('methods') and info['type'] == 'class':
-            with st.expander("🔧 Méthodes disponibles", expanded=False):
-                methods = info['methods'][:8]  # Limiter à 8 méthodes
-                cols = st.columns(min(4, len(methods)))
-                for i, method in enumerate(methods):
-                    with cols[i % 4]:
-                        st.code(method, language='python')
+            st.markdown("**🔧 Méthodes disponibles:**")
+            methods = info['methods'][:8]  # Limiter à 8 méthodes
+            cols = st.columns(min(4, len(methods)))
+            for i, method in enumerate(methods):
+                with cols[i % 4]:
+                    st.code(method, language='python')
         
         # Code d'exemple
-        with st.expander("💻 Exemple d'utilisation", expanded=False):
-            if info.get('type') == 'function':
-                st.code(f"""
+        st.markdown("**💻 Exemple d'utilisation:**")
+        if info.get('type') == 'function':
+            st.code(f"""
 # Import de la fonction
 from src.features.Pipelines.Transformateurs.{info['module']} import {name.replace('📋 ', '')}
 
 # Utilisation
 result = {name.replace('📋 ', '')}(...)
-                """, language='python')
-            else:
-                st.code(f"""
+            """, language='python')
+        else:
+            st.code(f"""
 # Import de la classe
 from src.features.Pipelines.Transformateurs.{info['module']} import {name}
 
@@ -609,7 +664,7 @@ pipeline = Pipeline([
     ('{name.lower()}', transformer),
     # ... autres étapes
 ])
-                """, language='python')
+            """, language='python')
         
         st.divider()
 

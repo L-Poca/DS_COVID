@@ -12,10 +12,10 @@ Structure modulaire:
 """
 
 # Imports pour compatibilité descendante
-from .tensorflow_feature_extractor import TensorFlowFeatureExtractor
-from .keras_classifiers import KerasClassifier, TransferLearningClassifier
-from .tensorflow_data_augmenter import TensorFlowDataAugmenter
-from .model_builders import (
+from ...Pipelines.Transformateurs.tensorflow_feature_extractor import TensorFlowFeatureExtractor
+from ...Pipelines.Transformateurs.keras_classifiers import KerasClassifier, TransferLearningClassifier
+from ...Pipelines.Transformateurs.tensorflow_data_augmenter import TensorFlowDataAugmenter
+from ...Pipelines.Transformateurs.model_builders import (
     create_simple_cnn,
     create_advanced_cnn,
     create_lightweight_cnn
