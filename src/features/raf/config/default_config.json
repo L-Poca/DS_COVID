@@ -69,5 +69,26 @@
     "results_format": "csv",
     "export_predictions": true,
     "save_plots": true
+  },
+  "interpretability": {
+    "gradcam": {
+      "alpha": 0.4,
+      "colormap": "jet",
+      "layer_auto": true
+    },
+    "shap": {
+      "max_evals": 100,
+      "background_size": 50,
+      "model_type": "auto"
+    },
+    "confidence": {
+      "high_threshold": 0.8,
+      "medium_threshold": 0.6
+    },
+    "reports": {
+      "format": "csv",
+      "save_heatmaps": true,
+      "generate_dashboard": true
+    }
   }
 }

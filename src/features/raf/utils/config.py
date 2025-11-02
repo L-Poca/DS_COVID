@@ -467,10 +467,13 @@ def set_config(config: Config):
     _global_config = config
 
 
-def setup_universal_environment() -> Config:
+def setup_universal_environment(check_dataset: bool = False) -> Config:
     """
     Configuration universelle complète - REMPLACE la cellule 1 du notebook
     Point d'entrée principal pour la configuration
+    
+    Args:
+        check_dataset: Si True, compte les images du dataset (peut être lent)
     
     Returns:
         Config: Configuration prête à l'emploi
@@ -500,9 +503,9 @@ def setup_universal_environment() -> Config:
     print(f"🔧 Batch size: {config.batch_size}")
     print(f"🎯 Époques: {config.epochs}")
     
-    # Vérification dataset
-    if config.data_dir.exists():
-        print(f"\n✅ Dataset accessible")
+    # Vérification dataset (optionnel, peut être lent)
+    if check_dataset and config.data_dir.exists():
+        print(f"\n🔍 Vérification du dataset...")
         total_images = 0
         
         for cls in config.classes:
@@ -516,6 +519,9 @@ def setup_universal_environment() -> Config:
                 print(f"  {cls}: ❌ Non trouvé")
         
         print(f"🎯 TOTAL: {total_images:,} images")
+    elif config.data_dir.exists():
+        print(f"\n✅ Dataset accessible: {config.data_dir}")
+        print(f"💡 Utilisez setup_universal_environment(check_dataset=True) pour compter les images")
     else:
         print(f"\n❌ Dataset non accessible: {config.data_dir}")
     
