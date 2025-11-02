@@ -36,7 +36,7 @@ try:
     print(f"✨ NOUVELLE FONCTIONNALITÉ: setup_universal_environment() remplace la cellule 1!")
     print(f"� NOUVEAU MODULE: interpretability (SHAP + GradCAM)")
     print(f"��������Modules disponibles: utils, data, augmentation, interpretability")
-  except ImportError as e:
+except ImportError as e:
     print(f"⚠️ Erreur import RAF: {e}")
     print("💡 Certains modules peuvent ne pas être disponibles")
 

@@ -377,9 +377,16 @@ def get_project_config(environment: Optional[str] = None) -> Config:
     
     # 4. Construire les chemins de base depuis JSON uniquement
     project_root = Path(flat_config.get('paths_project_root', '/home/cepa/DST/projet_DS/DS_COVID'))
-    data_dir = Path(flat_config.get('paths_data_dir', str(project_root / 'data')))
-    models_dir = Path(flat_config.get('paths_models_dir', str(project_root / 'models')))
-    results_dir = Path(flat_config.get('paths_results_dir', str(project_root / 'results')))
+    
+    # Convertir les chemins relatifs en absolus
+    data_dir_str = flat_config.get('paths_data_dir', 'data')
+    data_dir = project_root / data_dir_str if not Path(data_dir_str).is_absolute() else Path(data_dir_str)
+    
+    models_dir_str = flat_config.get('paths_models_dir', 'models')
+    models_dir = project_root / models_dir_str if not Path(models_dir_str).is_absolute() else Path(models_dir_str)
+    
+    results_dir_str = flat_config.get('paths_results_dir', 'results')
+    results_dir = project_root / results_dir_str if not Path(results_dir_str).is_absolute() else Path(results_dir_str)
     
     # 5. Préparer les arguments pour Config (ne garder que les champs valides)
     config_kwargs: dict = {
