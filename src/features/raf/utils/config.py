@@ -14,19 +14,7 @@ from dataclasses import dataclass, field, asdict
 from typing import Optional
 
 
-def detect_environment() -> str:
-    """
-    Détecte l'environnement d'exécution
-    
-    Returns:
-        str: 'colab', 'wsl', ou 'local'
-    """
-    try:
-        import google.colab  # type: ignore
-        return "colab"
-    except ImportError:
-        is_wsl = os.path.exists('/proc/version') and 'microsoft' in open('/proc/version').read().lower()
-        return "wsl" if is_wsl else "local"
+
 
 
 def _get_config_dir() -> Path:

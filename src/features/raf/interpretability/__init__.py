@@ -17,7 +17,9 @@ from .gradcam_explainer import (
     generate_gradcam, 
     visualize_gradcam_comparison,
     analyze_gradcam_regions,
-    extract_gradcam_features
+    extract_gradcam_features,
+    compare_gradcam_with_mask,
+    visualize_gradcam_mask_comparison
 )
 from .lime_explainer import (
     LIMEExplainer,
@@ -44,6 +46,8 @@ __all__ = [
     'visualize_gradcam_comparison',
     'analyze_gradcam_regions',
     'extract_gradcam_features',
+    'compare_gradcam_with_mask',
+    'visualize_gradcam_mask_comparison',
     
     # LIME
     'LIMEExplainer',
