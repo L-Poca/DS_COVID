@@ -210,8 +210,7 @@ from src.features.raf.utils.config import Config, deep_merge, flatten_dict, buil
 # CHARGEMENT DE LA CONFIGURATION
 # =============================================================================
 
-config = build_config(ENV)
-
+config = build_config(project_root=project_root, environment=ENV)
 
 # =============================================================================
 # AFFICHAGE DU RÉSUMÉ

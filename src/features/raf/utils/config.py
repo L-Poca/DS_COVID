@@ -133,11 +133,6 @@ class Config:
 
 
 
-
-# Configuration globale (singleton)
-_global_config: Optional[Config] = None
-
-
 def deep_merge(base: dict, override: dict) -> dict:
     """
     Fusionne récursivement deux dictionnaires
@@ -209,10 +204,8 @@ def load_config_files(project_root: Path, environment: str) -> dict:
     return config_data
 
 
-def build_config(environment: str) -> Config:
+def build_config(project_root: Path, environment: str) -> Config:
     """Construit l'objet Config depuis les fichiers JSON"""
-    # project_root déjà défini globalement
-    global project_root
     
     # Charger les fichiers JSON
     config_data = load_config_files(project_root, environment)
