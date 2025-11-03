@@ -246,6 +246,25 @@ class Config:
     results_format: str = "csv"
     export_predictions: bool = True
     save_plots: bool = True
+    
+    # Interprétabilité - Grad-CAM
+    gradcam_alpha: float = 0.4
+    gradcam_colormap: str = "jet"
+    gradcam_layer_auto: bool = True
+    
+    # Interprétabilité - SHAP
+    shap_max_evals: int = 100
+    shap_background_size: int = 50
+    shap_model_type: str = "auto"
+    
+    # Interprétabilité - Seuils de confiance
+    confidence_high_threshold: float = 0.8
+    confidence_medium_threshold: float = 0.6
+    
+    # Interprétabilité - Rapports
+    reports_format: str = "csv"
+    reports_save_heatmaps: bool = True
+    reports_generate_dashboard: bool = True
 
     def __post_init__(self):
         """Calculs dérivés après initialisation"""
@@ -438,6 +457,18 @@ def get_project_config(environment: Optional[str] = None) -> Config:
         'export_results_format': ('results_format', str),
         'export_export_predictions': ('export_predictions', bool),
         'export_save_plots': ('save_plots', bool),
+        # Paramètres d'interprétabilité
+        'interpretability_gradcam_alpha': ('gradcam_alpha', float),
+        'interpretability_gradcam_colormap': ('gradcam_colormap', str),
+        'interpretability_gradcam_layer_auto': ('gradcam_layer_auto', bool),
+        'interpretability_shap_max_evals': ('shap_max_evals', int),
+        'interpretability_shap_background_size': ('shap_background_size', int),
+        'interpretability_shap_model_type': ('shap_model_type', str),
+        'interpretability_confidence_high_threshold': ('confidence_high_threshold', float),
+        'interpretability_confidence_medium_threshold': ('confidence_medium_threshold', float),
+        'interpretability_reports_format': ('reports_format', str),
+        'interpretability_reports_save_heatmaps': ('reports_save_heatmaps', bool),
+        'interpretability_reports_generate_dashboard': ('reports_generate_dashboard', bool),
     }
     
     # Appliquer le mapping avec conversion de type

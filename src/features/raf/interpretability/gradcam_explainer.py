@@ -50,13 +50,20 @@ class GradCAMExplainer:
         self.model = model
         self.layer_name = layer_name or self._find_last_conv_layer()
         self.grad_model = None
-        self._build_grad_model()
+        # Ne pas construire le modèle de gradient immédiatement
+        # Il sera construit lors du premier appel à generate_gradcam
         
     def _find_last_conv_layer(self) -> str:
         """Trouve automatiquement la dernière couche convolutionnelle"""
         for layer in reversed(self.model.layers):
-            if len(layer.output_shape) == 4:  # Conv2D layer
-                return layer.name
+            # Compatibilité Keras 2.x et 3.x
+            try:
+                output_shape = layer.output.shape if hasattr(layer.output, 'shape') else layer.output_shape
+                if len(output_shape) == 4:  # Conv2D layer
+                    return layer.name
+            except (AttributeError, TypeError):
+                # Certaines couches n'ont pas de output_shape
+                continue
         
         # Si aucune couche conv trouvée, prendre la dernière avant les dense
         for layer in reversed(self.model.layers):
@@ -66,7 +73,11 @@ class GradCAMExplainer:
         raise ValueError("Aucune couche convolutionnelle trouvée dans le modèle")
     
     def _build_grad_model(self):
-        """Construit le modèle de gradient pour GradCAM"""
+        """Construit le modèle de gradient pour GradCAM (lazy initialization)"""
+        # Ne construire que si pas encore fait
+        if self.grad_model is not None:
+            return
+            
         try:
             # Trouver la couche cible
             target_layer = None
@@ -78,11 +89,10 @@ class GradCAMExplainer:
             if target_layer is None:
                 raise ValueError(f"Couche '{self.layer_name}' non trouvée dans le modèle")
             
-            # Créer le modèle de gradient
-            self.grad_model = keras.models.Model(
-                inputs=self.model.inputs,
-                outputs=[target_layer.output, self.model.output]
-            )
+            # Pour Keras 3.x avec Sequential, on ne peut pas créer le modèle de gradient
+            # avant que le modèle soit appelé. On stocke juste la couche cible.
+            self.target_layer = target_layer
+            self.grad_model = "lazy"  # Marqueur pour dire qu'on est prêt
             
         except Exception as e:
             print(f"Erreur lors de la construction du modèle de gradient: {e}")
@@ -102,13 +112,37 @@ class GradCAMExplainer:
         Returns:
             Dictionnaire contenant les cartes générées
         """
+        # Construire le modèle de gradient si pas encore fait (lazy init)
+        self._build_grad_model()
+        
         # S'assurer que l'image a la bonne forme
         if len(img.shape) == 3:
             img = np.expand_dims(img, axis=0)
         
-        # Calcul des gradients
+        # Convertir en tensor TensorFlow
+        img_tensor = tf.convert_to_tensor(img, dtype=tf.float32)
+        
+        # Calcul des gradients avec GradientTape
+        # On utilise directement le modèle au lieu d'un grad_model
         with tf.GradientTape() as tape:
-            conv_outputs, predictions = self.grad_model(img)
+            # Créer un modèle intermédiaire pour extraire les activations
+            # de la couche cible + les prédictions finales
+            tape.watch(img_tensor)
+            
+            # Forward pass - extraire les activations intermédiaires
+            conv_outputs = None
+            for i, layer in enumerate(self.model.layers):
+                if i == 0:
+                    x = layer(img_tensor)
+                else:
+                    x = layer(x)
+                
+                # Capturer la sortie de la couche cible
+                if layer.name == self.layer_name:
+                    conv_outputs = x
+                    tape.watch(conv_outputs)
+            
+            predictions = x  # Dernière couche = prédictions
             
             if class_idx is None:
                 class_idx = np.argmax(predictions[0])
@@ -179,13 +213,31 @@ class GradCAMExplainer:
         Returns:
             Dictionnaire contenant les cartes générées
         """
+        # Construire le modèle de gradient si pas encore fait (lazy init)
+        self._build_grad_model()
+        
         if len(img.shape) == 3:
             img = np.expand_dims(img, axis=0)
+        
+        # Convertir en tensor TensorFlow
+        img_tensor = tf.convert_to_tensor(img, dtype=tf.float32)
         
         with tf.GradientTape() as tape1:
             with tf.GradientTape() as tape2:
                 with tf.GradientTape() as tape3:
-                    conv_outputs, predictions = self.grad_model(img)
+                    # Forward pass manuel pour extraire les activations
+                    conv_outputs = None
+                    for i, layer in enumerate(self.model.layers):
+                        if i == 0:
+                            x = layer(img_tensor)
+                        else:
+                            x = layer(x)
+                        
+                        if layer.name == self.layer_name:
+                            conv_outputs = x
+                            tape3.watch(conv_outputs)
+                    
+                    predictions = x
                     if class_idx is None:
                         class_idx = np.argmax(predictions[0])
                     loss = predictions[:, class_idx]
