@@ -126,6 +126,7 @@ def _setup_dataset():
     dataset_paths = [
         './data/raw/COVID-19_Radiography_Dataset/COVID-19_Radiography_Dataset',
         './data/raw/COVID-19_Radiography_Dataset',
+        './data/raw/COVID',  # Si extraction simple
     ]
     
     # Vérifier si dataset existe
@@ -134,17 +135,34 @@ def _setup_dataset():
             print(f"✅ Dataset trouvé: {path}")
             return
     
-    # Extraction depuis Drive
-    archive_path = '/content/drive/MyDrive/archive_covid.zip'
-    if os.path.exists(archive_path):
+    # Chercher l'archive à plusieurs emplacements possibles
+    archive_paths = [
+        '/content/drive/MyDrive/DS_COVID/archive_covid.zip']
+    
+    archive_found = None
+    for archive_path in archive_paths:
+        if os.path.exists(archive_path):
+            archive_found = archive_path
+            print(f"✅ Archive trouvée: {archive_path}")
+            break
+    
+    if archive_found:
         print("📦 Extraction du dataset...")
         os.makedirs('./data/raw/', exist_ok=True)
         _run_command(
-            ['unzip', '-o', '-q', archive_path, '-d', './data/raw/'],
+            ['unzip', '-o', '-q', archive_found, '-d', './data/raw/'],
             "Dataset extrait"
         )
     else:
         print("⚠️ Archive dataset non trouvée dans Drive")
+        print("💡 Pour configurer le dataset sur Colab:")
+        print("   1️⃣ Téléchargez le dataset COVID-19 Radiography depuis Kaggle")
+        print("   2️⃣ Uploadez l'archive dans votre Google Drive:")
+        print("      - Soit: /content/drive/MyDrive/DS_COVID/archive_covid.zip")
+        print("      - Soit: /content/drive/MyDrive/archive_covid.zip")
+        print("   3️⃣ Relancez cette cellule")
+        print("\n   OU utilisez un dataset alternatif avec:")
+        print("   config.data_dir = Path('/votre/chemin/dataset')")
 
 
 def setup_colab_environment() -> bool:
