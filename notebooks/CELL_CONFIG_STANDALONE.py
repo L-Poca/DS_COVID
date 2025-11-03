@@ -91,6 +91,7 @@ if ENV == "colab":
 # FONCTIONS DE CONFIGURATION (autonomes, sans import externe)
 # =============================================================================
 
+
 @dataclass
 class Config:
     """Configuration centralisée du projet"""
