@@ -78,6 +78,7 @@ ds-covid-streamlit = "streamlit.app:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["features*", "models*", "explorationdata*", "streamlit*"]
+exclude = ["ds_covid*"]
 
 [tool.setuptools.package-dir]
 "" = "src"
