@@ -70,7 +70,13 @@ if ENV == "colab":
     
     print("📦 Installation des dépendances...")
     subprocess.run(['pip', 'install', '-r', 'requirements-colab.txt', '--quiet'], check=True)
-    subprocess.run(['pip', 'install', '-e', '.', '--quiet'], check=True)
+    
+    print("📦 Installation du package...")
+    result = subprocess.run(['pip', 'install', '-e', '.', '--quiet'], capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"⚠️ Erreur installation: {result.stderr}")
+    else:
+        print("✅ Package installé")
     
     print("💾 Montage Google Drive...")
     from google.colab import drive
@@ -85,6 +91,23 @@ if ENV == "colab":
             break
     
     print("✅ Bootstrap terminé")
+
+
+# =============================================================================
+# AJOUT DU CHEMIN src/ POUR LES IMPORTS
+# =============================================================================
+
+# Déterminer project_root selon l'environnement
+if ENV == "colab":
+    project_root = Path('/content/DS_COVID')
+else:
+    project_root = Path('/home/cepa/DST/projet_DS/DS_COVID')
+
+# Ajouter src/ au sys.path pour permettre "from features.raf.*"
+src_path = str(project_root / 'src')
+if src_path not in sys.path:
+    sys.path.insert(0, src_path)
+    print(f"✅ Chemin src/ ajouté: {src_path}")
 
 
 # =============================================================================
@@ -233,11 +256,8 @@ def load_config_files(project_root: Path, environment: str) -> dict:
 
 def build_config(environment: str) -> Config:
     """Construit l'objet Config depuis les fichiers JSON"""
-    # Déterminer project_root selon l'environnement
-    if environment == "colab":
-        project_root = Path('/content/DS_COVID')
-    else:
-        project_root = Path('/home/cepa/DST/projet_DS/DS_COVID')
+    # project_root déjà défini globalement
+    global project_root
     
     # Charger les fichiers JSON
     config_data = load_config_files(project_root, environment)
