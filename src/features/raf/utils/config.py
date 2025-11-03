@@ -14,12 +14,6 @@ from dataclasses import dataclass, field, asdict
 from typing import Optional
 
 
-# Chemins vers les fichiers de configuration
-CONFIG_DIR = Path(__file__).parent.parent / 'config'
-DEFAULT_CONFIG_PATH = CONFIG_DIR / 'default_config.json'
-COLAB_CONFIG_PATH = CONFIG_DIR / 'colab_config.json'
-
-
 def detect_environment() -> str:
     """
     Détecte l'environnement d'exécution
@@ -33,6 +27,29 @@ def detect_environment() -> str:
     except ImportError:
         is_wsl = os.path.exists('/proc/version') and 'microsoft' in open('/proc/version').read().lower()
         return "wsl" if is_wsl else "local"
+
+
+def _get_config_dir() -> Path:
+    """
+    Détermine le répertoire de configuration selon l'environnement
+    
+    Returns:
+        Path: Chemin vers le dossier config
+    """
+    env = detect_environment()
+    
+    if env == "colab":
+        # Sur Colab, utiliser le chemin du projet cloné
+        return Path('/content/DS_COVID/src/features/raf/config')
+    else:
+        # Local/WSL : utiliser le chemin relatif au fichier
+        return Path(__file__).parent.parent / 'config'
+
+
+# Chemins vers les fichiers de configuration (dynamiques)
+CONFIG_DIR = _get_config_dir()
+DEFAULT_CONFIG_PATH = CONFIG_DIR / 'default_config.json'
+COLAB_CONFIG_PATH = CONFIG_DIR / 'colab_config.json'
 
 
 def _run_command(cmd: list[str], description: str, quiet: bool = True) -> bool:
@@ -412,8 +429,16 @@ def get_project_config(environment: Optional[str] = None) -> Config:
     # 3. Aplatir le dictionnaire pour correspondre aux attributs de Config
     flat_config = flatten_dict(config_data)
     
-    # 4. Construire les chemins de base depuis JSON uniquement
-    project_root = Path(flat_config.get('paths_project_root', '/home/cepa/DST/projet_DS/DS_COVID'))
+    # 4. Construire les chemins de base depuis JSON avec détection environnement
+    # Utiliser le project_root de la config, sinon détecter automatiquement
+    if 'paths_project_root' in flat_config:
+        project_root = Path(flat_config['paths_project_root'])
+    else:
+        # Auto-détection selon l'environnement
+        if environment == "colab":
+            project_root = Path('/content/DS_COVID')
+        else:
+            project_root = Path('/home/cepa/DST/projet_DS/DS_COVID')
     
     # Convertir les chemins relatifs en absolus
     data_dir_str = flat_config.get('paths_data_dir', 'data')
