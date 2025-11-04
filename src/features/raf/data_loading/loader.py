@@ -6,13 +6,14 @@ Module de chargement des données pour le projet DS_COVID
 Gère le chargement, l'analyse et l'équilibrage du dataset
 """
 
-import pandas as pd
-import numpy as np
-from pathlib import Path
-from PIL import Image
-from typing import Dict, List, Tuple, Optional, Any
-from collections import Counter
 import warnings
+from collections import Counter
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
+import pandas as pd
+from PIL import Image
 
 from ..utils.config import get_config
 
@@ -189,13 +190,13 @@ class DataLoader:
                 return img_array
 
         except Exception as e:
-            warnings.warn(f"Erreur lors du chargement de {image_path}: {e}")
+            warnings.warn(f"Erreur lors du chargement de {image_path}: {e}", stacklevel=2)
             return None
 
     def get_dataset_summary(self) -> Dict:
         """Retourne un résumé complet du dataset"""
         image_paths, labels, class_counts = self.load_image_paths_and_labels()
-        stats = self.analyze_dataset(image_paths, labels)
+        self.analyze_dataset(image_paths, labels)
 
         return {"paths": image_paths, "labels": labels, "class_counts": class_counts}
 
