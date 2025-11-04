@@ -256,3 +256,35 @@ class DataLoader:
         stats['availability_rate'] = stats['available'] / stats['total'] if stats['total'] > 0 else 0
         
         return stats
+    
+    def load_images(self, image_paths: List[str], labels: List[str], 
+                   n_samples: Optional[int] = None, masked: bool = False) -> Tuple[List[np.ndarray], List[str], Optional[List[Optional[np.ndarray]]]]:
+        """
+        Charge des images avec ou sans masques selon l'argument 'masked'
+        
+        Args:
+            image_paths: Liste des chemins d'images
+            labels: Liste des labels correspondants
+            n_samples: Nombre d'échantillons à charger (None = tous)
+            masked: Si True, utilise load_images_with_masks, sinon load_sample_images
+            
+        Returns:
+            Tuple (images, labels, masks) où masks=None si masked=False
+        """
+        if masked:
+            # Utiliser la méthode avec masques
+            images, labels, masks = self.load_images_with_masks(
+                image_paths=image_paths,
+                labels=labels,
+                apply_mask=True,
+                n_samples=n_samples
+            )
+            return images, labels, masks
+        else:
+            # Utiliser la méthode simple sans masques
+            images, labels_out = self.load_sample_images(
+                image_paths=image_paths,
+                labels=labels,
+                n_samples=n_samples or 10
+            )
+            return images, labels_out, None
