@@ -15,7 +15,6 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 
-from ..utils.config import get_config
 
 
 class DataLoader:
@@ -23,7 +22,7 @@ class DataLoader:
 
     def __init__(self, data_dir: Optional[Path] = None, config=None):
         """Initialise le chargeur de données"""
-        self.config = config or get_config()
+        self.config = config
         self.data_dir = data_dir or self.config.data_dir
 
         # Initialisation du processeur de masques
@@ -122,40 +121,52 @@ class DataLoader:
 
         return subset_paths, subset_labels
 
-    def load_sample_images(
-        self, image_paths: List[str], labels: List[str], n_samples: int = 10
+    def load_images(
+        self, 
+        image_paths: List[str], 
+        labels: List[str], 
+        n_samples: Optional[int] = None
     ) -> Tuple[List[np.ndarray], List[str]]:
-        """Charge un échantillon d'images pour visualisation
-
+        """
+        Charge et préprocesse des images (SANS masquage)
+        
+        Usage typique: chargement simple pour entraînement ou visualisation
+        
         Args:
             image_paths: Liste des chemins d'images
-            labels: Liste des labels
-            n_samples: Nombre d'images à charger
-
+            labels: Liste des labels correspondants
+            n_samples: Nombre d'images à charger (None = toutes)
+            
         Returns:
-            tuple: (images, corresponding_labels)
+            tuple: (images_preprocessées, labels_correspondants)
+            
+        Example:
+            >>> loader = DataLoader(config)
+            >>> paths, labels, _ = loader.load_image_paths_and_labels()
+            >>> images, labels = loader.load_images(paths, labels, n_samples=100)
         """
-        print(f"🖼️ Chargement de {n_samples} images d'exemple...")
+        # Échantillonnage si demandé
+        if n_samples and n_samples < len(image_paths):
+            indices = np.random.choice(len(image_paths), n_samples, replace=False)
+            image_paths = [image_paths[i] for i in indices]
+            labels = [labels[i] for i in indices]
+        
+        print(f"🖼️ Chargement de {len(image_paths)} images...")
 
-        # Sélection aléatoire
-        sample_indices = np.random.choice(
-            len(image_paths), min(n_samples, len(image_paths)), replace=False
-        )
+        loaded_images = []
+        loaded_labels = []
 
-        sample_images = []
-        sample_labels = []
-
-        for idx in sample_indices:
+        for img_path, label in zip(image_paths, labels):
             try:
-                img = self.load_and_preprocess_image(image_paths[idx])
+                img = self.load_and_preprocess_image(img_path)
                 if img is not None:
-                    sample_images.append(img)
-                    sample_labels.append(labels[idx])
+                    loaded_images.append(img)
+                    loaded_labels.append(label)
             except Exception as e:
-                print(f"⚠️ Erreur chargement image {idx}: {e}")
+                print(f"⚠️ Erreur chargement {img_path}: {e}")
 
-        print(f"✅ {len(sample_images)} images chargées avec succès")
-        return sample_images, sample_labels
+        print(f"✅ {len(loaded_images)}/{len(image_paths)} images chargées avec succès")
+        return loaded_images, loaded_labels
 
     def load_and_preprocess_image(
         self, image_path: str, target_size: Optional[Tuple[int, int]] = None
@@ -196,40 +207,94 @@ class DataLoader:
     def get_dataset_summary(self) -> Dict:
         """Retourne un résumé complet du dataset"""
         image_paths, labels, class_counts = self.load_image_paths_and_labels()
-        self.analyze_dataset(image_paths, labels)
 
         return {"paths": image_paths, "labels": labels, "class_counts": class_counts}
 
-    def load_images_with_masks(
+    def load_masked_images(
         self,
         image_paths: List[str],
         labels: List[str],
-        apply_mask: bool = True,
         n_samples: Optional[int] = None,
-    ) -> Tuple[List[np.ndarray], List[str], List[Optional[np.ndarray]]]:
+    ) -> Tuple[List[np.ndarray], List[str]]:
         """
-        Charge les images avec leurs masques
-
+        Charge des images préprocessées AVEC masques appliqués (segmentation)
+        
+        Usage typique: pour entraîner un modèle sur des images segmentées
+        Les zones hors masque sont mises à 0 (noir)
+        
         Args:
             image_paths: Liste des chemins d'images
             labels: Liste des labels correspondants
-            apply_mask: Si True, applique les masques aux images
-            n_samples: Nombre d'échantillons à charger (None = tous)
-
+            n_samples: Nombre d'images à charger (None = toutes)
+            
         Returns:
-            Tuple (images, labels, masques)
+            tuple: (images_masquées, labels_correspondants)
+            
+        Example:
+            >>> loader = DataLoader(config)
+            >>> paths, labels, _ = loader.load_image_paths_and_labels()
+            >>> masked_imgs, labels = loader.load_masked_images(paths, labels, n_samples=100)
         """
-        if n_samples:
-            indices = np.random.choice(
-                len(image_paths), min(n_samples, len(image_paths)), replace=False
-            )
+        # Échantillonnage si demandé
+        if n_samples and n_samples < len(image_paths):
+            indices = np.random.choice(len(image_paths), n_samples, replace=False)
             image_paths = [image_paths[i] for i in indices]
             labels = [labels[i] for i in indices]
 
-        print(f"🖼️ Chargement de {len(image_paths)} images avec masques...")
+        print(f"🎭 Chargement de {len(image_paths)} images avec masques appliqués...")
 
-        processed_images, masks = self.mask_processor.batch_process_masks(
-            image_paths, apply_mask
+        processed_images, _ = self.mask_processor.batch_process_with_masks(
+            image_paths, apply_mask=True
+        )
+
+        # Filtrage pour ne garder que les images réussies
+        valid_indices = [i for i, img in enumerate(processed_images) if img is not None]
+        valid_images = [processed_images[i] for i in valid_indices]
+        valid_labels = [labels[i] for i in valid_indices]
+
+        print(f"✅ {len(valid_images)}/{len(image_paths)} images masquées chargées")
+
+        return valid_images, valid_labels
+
+    def load_images_and_masks(
+        self,
+        image_paths: List[str],
+        labels: List[str],
+        n_samples: Optional[int] = None,
+    ) -> Tuple[List[np.ndarray], List[str], List[Optional[np.ndarray]]]:
+        """
+        Charge des images ET leurs masques séparément (pour visualisation/analyse)
+        
+        Usage typique: pour visualiser les masques ou analyser la segmentation
+        Les masques sont retournés séparément, non appliqués aux images
+        
+        Args:
+            image_paths: Liste des chemins d'images
+            labels: Liste des labels correspondants
+            n_samples: Nombre d'images à charger (None = toutes)
+            
+        Returns:
+            tuple: (images, labels, masques)
+            - images: images originales préprocessées
+            - labels: labels correspondants
+            - masques: masques binaires (ou None si pas disponible)
+            
+        Example:
+            >>> loader = DataLoader(config)
+            >>> paths, labels, _ = loader.load_image_paths_and_labels()
+            >>> imgs, labs, masks = loader.load_images_and_masks(paths, labels, n_samples=10)
+            >>> # Visualiser image et masque côte à côte
+        """
+        # Échantillonnage si demandé
+        if n_samples and n_samples < len(image_paths):
+            indices = np.random.choice(len(image_paths), n_samples, replace=False)
+            image_paths = [image_paths[i] for i in indices]
+            labels = [labels[i] for i in indices]
+
+        print(f"🖼️ Chargement de {len(image_paths)} images + masques séparés...")
+
+        processed_images, masks = self.mask_processor.batch_process_with_masks(
+            image_paths, apply_mask=False
         )
 
         # Filtrage pour ne garder que les images réussies
@@ -238,19 +303,11 @@ class DataLoader:
         valid_labels = [labels[i] for i in valid_indices]
         valid_masks = [masks[i] for i in valid_indices]
 
-        print(f"✅ {len(valid_images)} images chargées avec succès")
+        print(f"✅ {len(valid_images)}/{len(image_paths)} images chargées")
 
         # Statistiques sur les masques
-        mask_stats = {"with_mask": 0, "without_mask": 0}
-        for mask in valid_masks:
-            if mask is not None:
-                mask_stats["with_mask"] += 1
-            else:
-                mask_stats["without_mask"] += 1
-
-        print(
-            f"📊 Masques: {mask_stats['with_mask']} disponibles, {mask_stats['without_mask']} manquants"
-        )
+        masks_available = sum(1 for m in valid_masks if m is not None)
+        print(f"📊 Masques: {masks_available} disponibles, {len(valid_masks) - masks_available} manquants")
 
         return valid_images, valid_labels, valid_masks
 
@@ -268,7 +325,7 @@ class DataLoader:
         Returns:
             Dictionnaire avec les statistiques de disponibilité
         """
-        stats = {"available": 0, "missing": 0, "total": len(image_paths)}
+        stats: Dict[str, Any] = {"available": 0, "missing": 0, "total": len(image_paths)}
 
         for image_path in image_paths:
             mask_path = self.mask_processor.get_mask_path_from_image_path(image_path)
@@ -278,42 +335,7 @@ class DataLoader:
                 stats["missing"] += 1
 
         stats["availability_rate"] = (
-            stats["available"] / stats["total"] if stats["total"] > 0 else 0
+            stats["available"] / stats["total"] if stats["total"] > 0 else 0.0
         )
 
         return stats
-
-    def load_images(
-        self,
-        image_paths: List[str],
-        labels: List[str],
-        n_samples: Optional[int] = None,
-        masked: bool = False,
-    ) -> Tuple[List[np.ndarray], List[str], Optional[List[Optional[np.ndarray]]]]:
-        """
-        Charge des images avec ou sans masques selon l'argument 'masked'
-
-        Args:
-            image_paths: Liste des chemins d'images
-            labels: Liste des labels correspondants
-            n_samples: Nombre d'échantillons à charger (None = tous)
-            masked: Si True, utilise load_images_with_masks, sinon load_sample_images
-
-        Returns:
-            Tuple (images, labels, masks) où masks=None si masked=False
-        """
-        if masked:
-            # Utiliser la méthode avec masques
-            images, labels, masks = self.load_images_with_masks(
-                image_paths=image_paths,
-                labels=labels,
-                apply_mask=True,
-                n_samples=n_samples,
-            )
-            return images, labels, masks
-        else:
-            # Utiliser la méthode simple sans masques
-            images, labels_out = self.load_sample_images(
-                image_paths=image_paths, labels=labels, n_samples=n_samples or 10
-            )
-            return images, labels_out, None

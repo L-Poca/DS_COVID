@@ -51,7 +51,7 @@ class MaskProcessor:
                 return mask_array
                 
         except Exception as e:
-            warnings.warn(f"Erreur lors du chargement du masque {mask_path}: {e}")
+            warnings.warn(f"Erreur lors du chargement du masque {mask_path}: {e}", stacklevel=2)
             return None
     
     def get_mask_path_from_image_path(self, image_path: str) -> Optional[str]:
@@ -65,10 +65,10 @@ class MaskProcessor:
             Chemin vers le masque correspondant ou None
         """
         try:
-            image_path = Path(image_path)
+            path_obj = Path(image_path)
             
             # Remplace 'images' par 'masks' dans le chemin
-            mask_path = str(image_path).replace('/images/', '/masks/')
+            mask_path = str(path_obj).replace('/images/', '/masks/')
             
             # Vérification que le fichier existe
             if Path(mask_path).exists():
@@ -77,7 +77,7 @@ class MaskProcessor:
                 return None
                 
         except Exception as e:
-            warnings.warn(f"Erreur génération chemin masque pour {image_path}: {e}")
+            warnings.warn(f"Erreur génération chemin masque pour {image_path}: {e}", stacklevel=2)
             return None
     
     def apply_mask_to_image(self, image: np.ndarray, mask: np.ndarray, 
@@ -161,17 +161,30 @@ class MaskProcessor:
             'background_ratio': float((total_pixels - masked_pixels) / total_pixels)
         }
     
-    def batch_process_masks(self, image_paths: List[str], 
-                           apply_mask: bool = True) -> Tuple[List[np.ndarray], List[Optional[np.ndarray]]]:
+    def batch_process_with_masks(
+        self, 
+        image_paths: List[str], 
+        apply_mask: bool = False
+    ) -> Tuple[List[Optional[np.ndarray]], List[Optional[np.ndarray]]]:
         """
         Traite un lot d'images avec leurs masques
         
         Args:
             image_paths: Liste des chemins d'images
-            apply_mask: Si True, applique le masque aux images
+            apply_mask: 
+                - Si False: retourne images originales + masques séparés
+                - Si True: retourne images avec masques APPLIQUÉS + masques
             
         Returns:
             Tuple (images_processées, masques)
+            - Si apply_mask=False: (images_originales, masques)
+            - Si apply_mask=True: (images_masquées, masques)
+            
+        Note:
+            Préférez utiliser les méthodes du DataLoader:
+            - load_images() : images sans masques
+            - load_masked_images() : images avec masques appliqués
+            - load_images_and_masks() : images + masques séparés
         """
         processed_images = []
         masks = []
@@ -185,7 +198,9 @@ class MaskProcessor:
                     img = img.resize((self.config.img_width, self.config.img_height), Image.Resampling.LANCZOS)
                     image_array = np.array(img, dtype=np.float32) / 255.0
             except Exception as e:
-                warnings.warn(f"Erreur chargement image {image_path}: {e}")
+                warnings.warn(f"Erreur chargement image {image_path}: {e}", stacklevel=2)
+                processed_images.append(None)
+                masks.append(None)
                 continue
             
             # Chargement du masque
@@ -193,9 +208,8 @@ class MaskProcessor:
             if mask_path:
                 mask = self.load_mask(mask_path)
                 if mask is not None and apply_mask:
-                    # Application du masque
-                    mask_normalized = mask.astype(np.float32) / 255.0
-                    image_array = self.apply_mask_to_image(image_array, mask_normalized)
+                    # Application du masque à l'image
+                    image_array = self.apply_mask_to_image(image_array, mask)
             else:
                 mask = None
             
