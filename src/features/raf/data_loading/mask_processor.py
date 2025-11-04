@@ -52,9 +52,7 @@ class MaskProcessor:
                 
         except Exception as e:
             warnings.warn(f"Erreur lors du chargement du masque {mask_path}: {e}", stacklevel=2)
-            return None
-    
-    def get_mask_path_from_image_path(self, image_path: str) -> Optional[str]:
+            return None    def get_mask_path_from_image_path(self, image_path: str) -> Optional[str]:
         """
         Déduit le chemin du masque à partir du chemin de l'image
         
