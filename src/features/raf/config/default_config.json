@@ -1,0 +1,94 @@
+{
+  "paths": {
+    "data_dir": "data/raw/COVID-19_Radiography_Dataset/COVID-19_Radiography_Dataset",
+    "models_dir": "models",
+    "results_dir": "results"
+  },
+  "images": {
+    "width": 256,
+    "height": 256,
+    "channels": 3
+  },
+  "training": {
+    "batch_size": 32,
+    "epochs": 50,
+    "learning_rate": 0.001,
+    "validation_split": 0.2,
+    "test_split": 0.2,
+    "random_seed": 42
+  },
+  "dataset": {
+    "classes": ["COVID", "Lung_Opacity", "Normal", "Viral Pneumonia"]
+  },
+  "models": {
+    "random_forest": {
+      "n_estimators": 200,
+      "max_depth": 15,
+      "min_samples_split": 5,
+      "min_samples_leaf": 2
+    },
+    "xgboost": {
+      "n_estimators": 100,
+      "learning_rate": 0.1,
+      "max_depth": 3,
+      "min_child_weight": 1
+    },
+    "transfer_learning": {
+      "pretrained_weights": "imagenet",
+      "freeze_base_layers": true,
+      "fine_tune_layers": 10
+    }
+  },
+  "callbacks": {
+    "early_stopping_patience": 10,
+    "reduce_lr_patience": 5,
+    "reduce_lr_factor": 0.5,
+    "min_lr": 1e-7
+  },
+  "cross_validation": {
+    "cv_folds": 3,
+    "n_jobs": -1
+  },
+  "system": {
+    "verbose": 1,
+    "log_level": "INFO"
+  },
+  "memory": {
+    "max_images_per_class": 1000,
+    "sample_size_analysis": 200
+  },
+  "visualization": {
+    "plot_style": "seaborn-v0_8",
+    "color_palette": "husl",
+    "figure_width": 12,
+    "figure_height": 8,
+    "dpi": 100
+  },
+  "export": {
+    "model_save_format": "h5",
+    "results_format": "csv",
+    "export_predictions": true,
+    "save_plots": true
+  },
+  "interpretability": {
+    "gradcam": {
+      "alpha": 0.4,
+      "colormap": "jet",
+      "layer_auto": true
+    },
+    "shap": {
+      "max_evals": 100,
+      "background_size": 50,
+      "model_type": "auto"
+    },
+    "confidence": {
+      "high_threshold": 0.8,
+      "medium_threshold": 0.6
+    },
+    "reports": {
+      "format": "csv",
+      "save_heatmaps": true,
+      "generate_dashboard": true
+    }
+  }
+}

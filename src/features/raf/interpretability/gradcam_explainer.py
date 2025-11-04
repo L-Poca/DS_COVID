@@ -50,13 +50,20 @@ class GradCAMExplainer:
         self.model = model
         self.layer_name = layer_name or self._find_last_conv_layer()
         self.grad_model = None
-        self._build_grad_model()
+        # Ne pas construire le modèle de gradient immédiatement
+        # Il sera construit lors du premier appel à generate_gradcam
         
     def _find_last_conv_layer(self) -> str:
         """Trouve automatiquement la dernière couche convolutionnelle"""
         for layer in reversed(self.model.layers):
-            if len(layer.output_shape) == 4:  # Conv2D layer
-                return layer.name
+            # Compatibilité Keras 2.x et 3.x
+            try:
+                output_shape = layer.output.shape if hasattr(layer.output, 'shape') else layer.output_shape
+                if len(output_shape) == 4:  # Conv2D layer
+                    return layer.name
+            except (AttributeError, TypeError):
+                # Certaines couches n'ont pas de output_shape
+                continue
         
         # Si aucune couche conv trouvée, prendre la dernière avant les dense
         for layer in reversed(self.model.layers):
@@ -66,7 +73,11 @@ class GradCAMExplainer:
         raise ValueError("Aucune couche convolutionnelle trouvée dans le modèle")
     
     def _build_grad_model(self):
-        """Construit le modèle de gradient pour GradCAM"""
+        """Construit le modèle de gradient pour GradCAM (lazy initialization)"""
+        # Ne construire que si pas encore fait
+        if self.grad_model is not None:
+            return
+            
         try:
             # Trouver la couche cible
             target_layer = None
@@ -78,11 +89,10 @@ class GradCAMExplainer:
             if target_layer is None:
                 raise ValueError(f"Couche '{self.layer_name}' non trouvée dans le modèle")
             
-            # Créer le modèle de gradient
-            self.grad_model = keras.models.Model(
-                inputs=self.model.inputs,
-                outputs=[target_layer.output, self.model.output]
-            )
+            # Pour Keras 3.x avec Sequential, on ne peut pas créer le modèle de gradient
+            # avant que le modèle soit appelé. On stocke juste la couche cible.
+            self.target_layer = target_layer
+            self.grad_model = "lazy"  # Marqueur pour dire qu'on est prêt
             
         except Exception as e:
             print(f"Erreur lors de la construction du modèle de gradient: {e}")
@@ -102,13 +112,37 @@ class GradCAMExplainer:
         Returns:
             Dictionnaire contenant les cartes générées
         """
+        # Construire le modèle de gradient si pas encore fait (lazy init)
+        self._build_grad_model()
+        
         # S'assurer que l'image a la bonne forme
         if len(img.shape) == 3:
             img = np.expand_dims(img, axis=0)
         
-        # Calcul des gradients
+        # Convertir en tensor TensorFlow
+        img_tensor = tf.convert_to_tensor(img, dtype=tf.float32)
+        
+        # Calcul des gradients avec GradientTape
+        # On utilise directement le modèle au lieu d'un grad_model
         with tf.GradientTape() as tape:
-            conv_outputs, predictions = self.grad_model(img)
+            # Créer un modèle intermédiaire pour extraire les activations
+            # de la couche cible + les prédictions finales
+            tape.watch(img_tensor)
+            
+            # Forward pass - extraire les activations intermédiaires
+            conv_outputs = None
+            for i, layer in enumerate(self.model.layers):
+                if i == 0:
+                    x = layer(img_tensor)
+                else:
+                    x = layer(x)
+                
+                # Capturer la sortie de la couche cible
+                if layer.name == self.layer_name:
+                    conv_outputs = x
+                    tape.watch(conv_outputs)
+            
+            predictions = x  # Dernière couche = prédictions
             
             if class_idx is None:
                 class_idx = np.argmax(predictions[0])
@@ -179,13 +213,31 @@ class GradCAMExplainer:
         Returns:
             Dictionnaire contenant les cartes générées
         """
+        # Construire le modèle de gradient si pas encore fait (lazy init)
+        self._build_grad_model()
+        
         if len(img.shape) == 3:
             img = np.expand_dims(img, axis=0)
+        
+        # Convertir en tensor TensorFlow
+        img_tensor = tf.convert_to_tensor(img, dtype=tf.float32)
         
         with tf.GradientTape() as tape1:
             with tf.GradientTape() as tape2:
                 with tf.GradientTape() as tape3:
-                    conv_outputs, predictions = self.grad_model(img)
+                    # Forward pass manuel pour extraire les activations
+                    conv_outputs = None
+                    for i, layer in enumerate(self.model.layers):
+                        if i == 0:
+                            x = layer(img_tensor)
+                        else:
+                            x = layer(x)
+                        
+                        if layer.name == self.layer_name:
+                            conv_outputs = x
+                            tape3.watch(conv_outputs)
+                    
+                    predictions = x
                     if class_idx is None:
                         class_idx = np.argmax(predictions[0])
                     loss = predictions[:, class_idx]
@@ -524,3 +576,181 @@ def extract_gradcam_features(heatmap: np.ndarray) -> Dict[str, float]:
         'concentration_75': conc_75,
         'concentration_90': conc_90
     }
+
+
+def compare_gradcam_with_mask(gradcam_heatmap: np.ndarray, mask: np.ndarray, 
+                             threshold: float = 0.5) -> Dict[str, float]:
+    """
+    Compare une heatmap GradCAM avec un mask de segmentation
+    
+    Args:
+        gradcam_heatmap: Heatmap GradCAM normalisée [0, 1]
+        mask: Mask binaire de segmentation (même taille que heatmap)
+        threshold: Seuil pour binariser la heatmap GradCAM
+        
+    Returns:
+        Métriques de comparaison
+    """
+    # Redimensionner le mask si nécessaire
+    if gradcam_heatmap.shape != mask.shape:
+        mask = cv2.resize(mask.astype(np.float32), 
+                         (gradcam_heatmap.shape[1], gradcam_heatmap.shape[0]), 
+                         interpolation=cv2.INTER_NEAREST)
+    
+    # Normaliser le mask en [0, 1]
+    mask = mask.astype(np.float32)
+    if mask.max() > 1:
+        mask = mask / 255.0
+    
+    # Binariser la heatmap GradCAM
+    gradcam_binary = (gradcam_heatmap > threshold).astype(np.float32)
+    
+    # Calcul des métriques de superposition
+    intersection = np.sum(gradcam_binary * mask)
+    union = np.sum((gradcam_binary + mask) > 0)
+    
+    # IoU (Intersection over Union)
+    iou = intersection / union if union > 0 else 0
+    
+    # Dice coefficient
+    dice = (2 * intersection) / (np.sum(gradcam_binary) + np.sum(mask)) if (np.sum(gradcam_binary) + np.sum(mask)) > 0 else 0
+    
+    # Précision et Rappel
+    gradcam_positive = np.sum(gradcam_binary)
+    mask_positive = np.sum(mask)
+    
+    precision = intersection / gradcam_positive if gradcam_positive > 0 else 0
+    recall = intersection / mask_positive if mask_positive > 0 else 0
+    
+    # F1-score
+    f1_score = (2 * precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+    
+    # Corrélation de Pearson entre heatmap et mask
+    correlation = np.corrcoef(gradcam_heatmap.flatten(), mask.flatten())[0, 1]
+    
+    # Centroid distance (distance entre centres de masse)
+    if np.sum(gradcam_binary) > 0 and np.sum(mask) > 0:
+        y_grad, x_grad = np.where(gradcam_binary > 0)
+        y_mask, x_mask = np.where(mask > 0)
+        
+        centroid_grad = (np.mean(y_grad), np.mean(x_grad))
+        centroid_mask = (np.mean(y_mask), np.mean(x_mask))
+        
+        centroid_distance = np.sqrt((centroid_grad[0] - centroid_mask[0])**2 + 
+                                   (centroid_grad[1] - centroid_mask[1])**2)
+        # Normaliser par la taille de l'image
+        centroid_distance_norm = centroid_distance / np.sqrt(gradcam_heatmap.shape[0]**2 + gradcam_heatmap.shape[1]**2)
+    else:
+        centroid_distance = -1
+        centroid_distance_norm = -1
+    
+    return {
+        'iou': iou,
+        'dice': dice,
+        'precision': precision,
+        'recall': recall,
+        'f1_score': f1_score,
+        'correlation': correlation,
+        'centroid_distance': centroid_distance,
+        'centroid_distance_normalized': centroid_distance_norm,
+        'threshold': threshold
+    }
+
+
+def visualize_gradcam_mask_comparison(image: np.ndarray, gradcam_heatmap: np.ndarray, 
+                                     mask: np.ndarray, comparison_metrics: Dict[str, float],
+                                     title: str = "GradCAM vs Ground Truth Mask",
+                                     class_names: Optional[List[str]] = None,
+                                     predicted_class: Optional[int] = None,
+                                     confidence: Optional[float] = None):
+    """
+    Visualise la comparaison entre GradCAM et le mask de vérité terrain
+    
+    Args:
+        image: Image originale
+        gradcam_heatmap: Heatmap GradCAM
+        mask: Mask de segmentation
+        comparison_metrics: Métriques de comparaison
+        title: Titre du graphique
+        class_names: Noms des classes
+        predicted_class: Classe prédite
+        confidence: Confiance de la prédiction
+    
+    Returns:
+        Figure matplotlib
+    """
+    fig, axes = plt.subplots(2, 3, figsize=(18, 12))
+    
+    # 1. Image originale
+    axes[0, 0].imshow(image)
+    axes[0, 0].set_title('Image Originale', fontsize=12, fontweight='bold')
+    axes[0, 0].axis('off')
+    
+    # 2. Mask de vérité terrain
+    axes[0, 1].imshow(image)
+    if mask.max() > 1:
+        mask_vis = mask / 255.0
+    else:
+        mask_vis = mask
+    axes[0, 1].imshow(mask_vis, cmap='Reds', alpha=0.5)
+    axes[0, 1].set_title('Ground Truth Mask', fontsize=12, fontweight='bold')
+    axes[0, 1].axis('off')
+    
+    # 3. GradCAM overlay
+    axes[0, 2].imshow(image)
+    axes[0, 2].imshow(gradcam_heatmap, cmap='jet', alpha=0.5)
+    
+    title_text = 'GradCAM Heatmap'
+    if predicted_class is not None and class_names is not None:
+        title_text += f'\n{class_names[predicted_class]}'
+    if confidence is not None:
+        title_text += f' ({confidence:.1%})'
+    
+    axes[0, 2].set_title(title_text, fontsize=12, fontweight='bold')
+    axes[0, 2].axis('off')
+    
+    # 4. Overlay GradCAM + Mask
+    axes[1, 0].imshow(image)
+    axes[1, 0].imshow(gradcam_heatmap, cmap='jet', alpha=0.3)
+    axes[1, 0].imshow(mask_vis, cmap='Greens', alpha=0.3)
+    axes[1, 0].set_title('Superposition\n(Rouge=GradCAM, Vert=Mask)', fontsize=12, fontweight='bold')
+    axes[1, 0].axis('off')
+    
+    # 5. Heatmap seule
+    im = axes[1, 1].imshow(gradcam_heatmap, cmap='jet')
+    axes[1, 1].set_title('GradCAM Heatmap Seule', fontsize=12, fontweight='bold')
+    axes[1, 1].axis('off')
+    plt.colorbar(im, ax=axes[1, 1], fraction=0.046)
+    
+    # 6. Métriques textuelles
+    axes[1, 2].axis('off')
+    metrics_text = f"""
+📊 Métriques de Comparaison
+
+IoU (Intersection over Union):
+  {comparison_metrics['iou']:.3f}
+
+Dice Coefficient:
+  {comparison_metrics['dice']:.3f}
+
+Précision: {comparison_metrics['precision']:.3f}
+Rappel: {comparison_metrics['recall']:.3f}
+F1-Score: {comparison_metrics['f1_score']:.3f}
+
+Corrélation: {comparison_metrics['correlation']:.3f}
+
+Distance Centroïdes (norm):
+  {comparison_metrics['centroid_distance_normalized']:.3f}
+
+Seuil GradCAM: {comparison_metrics['threshold']:.2f}
+    """
+    
+    axes[1, 2].text(0.1, 0.5, metrics_text, fontsize=11, 
+                    verticalalignment='center',
+                    family='monospace',
+                    bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+    
+    plt.suptitle(title, fontsize=14, fontweight='bold', y=0.98)
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    
+    return fig

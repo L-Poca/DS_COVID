@@ -127,6 +127,7 @@ celerybeat.pid
 # Environments
 .env
 .venv
+.interpre_venv
 env/
 venv/
 ENV/
@@ -180,3 +181,5 @@ doc/
 # latex
 
 img_latex/
+# EDA Pipeline outputs
+outputs/

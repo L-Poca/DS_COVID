@@ -1,0 +1,15 @@
+{
+  "paths": {
+    "project_root": "/content/DS_COVID",
+    "data_dir": "./data/raw/COVID-19_Radiography_Dataset/COVID-19_Radiography_Dataset",
+    "models_dir": "./models",
+    "results_dir": "./results"
+  },
+  "training": {
+    "batch_size": 64,
+    "epochs": 100
+  },
+  "system": {
+    "verbose": 1
+  }
+}

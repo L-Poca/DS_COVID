@@ -12,6 +12,7 @@ seaborn>=0.11.0
 
 # Machine Learning
 scikit-learn>=1.0.0
+scikit-image>=0.19.0      # Traitement d'images scientifique
 scipy>=1.7.0
 
 # Image processing
@@ -20,6 +21,10 @@ pillow>=8.0.0
 
 # Deep Learning
 tensorflow>=2.8.0
+
+# Interprétabilité
+shap>=0.41.0              # Explications SHAP
+lime>=0.2.0.1             # Alternative à SHAP
 
 # Boosting libraries
 xgboost>=1.5.0
@@ -32,12 +37,26 @@ optuna>=3.0.0
 # Utilities
 python-dotenv>=0.19.0
 tqdm>=4.60.0
+joblib>=1.1.0             # Sérialisation de modèles
 
 # Visualization extras
 plotly>=5.0.0
 
 # Progress and monitoring
 tensorboard>=2.8.0
+
+# Dimensionality reduction and embeddings
+umap-learn>=0.5.0
+torch>=1.13.0
+torchvision>=0.14.0
+
+# Additional for EDA
+openpyxl>=3.0.0
+
+# Développement et tests (optionnel)
+pytest>=7.1.0            # Tests unitaires
+jupyter>=1.0.0           # Notebooks
+ipykernel>=6.13.0        # Kernel Jupyter
 
 # NOTE: ipython, ipykernel, jupyter exclus pour éviter les conflits Colab
 # Ces packages sont déjà disponibles dans l'environnement Colab

@@ -1,4 +1,4 @@
 # Utils module
-from .config import Config, get_project_config, get_config, set_config, setup_universal_environment
+from .config import Config, deep_merge, flatten_dict, load_config_files, build_config
 
-__all__ = ['Config', 'get_project_config', 'get_config', 'set_config', 'setup_universal_environment']
+__all__ = ['Config', 'deep_merge', 'flatten_dict', 'load_config_files', 'build_config']

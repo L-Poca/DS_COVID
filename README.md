@@ -1,6 +1,34 @@
 # 🦠 Détection COVID-19
 ## Application de détection COVID-19 à partir d'images radiographiques
 
+## 🚀 NEW: Complete EDA Pipeline
+
+A comprehensive exploratory data analysis pipeline for the COVID-19 radiography dataset is now available!
+
+**Features:**
+- 📊 Complete dataset processing with validation
+- 🧠 Deep learning embeddings (ResNet50)
+- 📉 Dimensionality reduction (PCA, UMAP, t-SNE)
+- 🔍 Clustering analysis (KMeans, DBSCAN)
+- 📈 20+ advanced visualizations
+- 📝 Automated report generation
+- ☁️ Google Colab ready
+
+**Quick Start:**
+```bash
+python src/explorationdata/run_eda_pipeline.py \
+    --base-path "data/raw/COVID-19_Radiography_Dataset/COVID-19_Radiography_Dataset" \
+    --metadata-path "metadata"
+```
+
+**Documentation:**
+- [Complete Guide](src/explorationdata/README_EDA_PIPELINE.md)
+- [Examples](EXAMPLE_USAGE.md)
+- [Summary](src/explorationdata/PIPELINE_SUMMARY.md)
+- [Colab Notebook](notebooks/Complete_EDA_COVID_Dataset.ipynb)
+
+---
+
 Project Organization
 ------------
 

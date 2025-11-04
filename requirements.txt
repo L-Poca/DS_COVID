@@ -41,3 +41,11 @@ plotly>=5.0.0
 
 # Progress and monitoring
 tensorboard>=2.8.0
+
+# Dimensionality reduction and embeddings
+umap-learn>=0.5.0
+torch>=1.13.0
+torchvision>=0.14.0
+
+# Additional for EDA
+openpyxl>=3.0.0

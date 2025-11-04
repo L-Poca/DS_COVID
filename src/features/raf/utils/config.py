@@ -2,201 +2,42 @@
 # CONFIGURATION UNIVERSELLE RAF
 # =================================
 """
-Configuration universelle qui intègre la logique Colab/WSL
-Remplace la cellule de configuration du notebook par une approche modulaire
+Configuration universelle simplifiée pour Colab/WSL
+Utilise uniquement des fichiers JSON pour la configuration (pas de .env)
 """
 
 import os
-import shutil
+import json
 import subprocess
 from pathlib import Path
-from dataclasses import dataclass, field
-from typing import Dict, List, Tuple, Optional
-from dotenv import load_dotenv
-
-
-def detect_environment() -> Tuple[bool, bool]:
-    """
-    Détecte l'environnement d'exécution
-    
-    Returns:
-        tuple: (in_colab, in_wsl)
-    """
-    try:
-        import google.colab
-        return True, False  # Colab
-    except ImportError:
-        # Détecter WSL
-        wsl_check = os.path.exists('/proc/version') and 'microsoft' in open('/proc/version').read().lower()
-        return False, wsl_check #
-
-
-def setup_colab_environment(project_root: Path) -> bool:
-    """
-    Configure automatiquement l'environnement Colab
-    
-    Args:
-        project_root: Racine du projet
-        
-    Returns:
-        bool: Succès de la configuration
-    """
-    try:
-        print("🔄 === CONFIGURATION COLAB AUTOMATIQUE ===")
-        
-        # 1. Positionnement
-        os.chdir('/content')
-        
-        # 2. Clone du repository si nécessaire
-        if not os.path.exists('/content/DS_COVID'):
-            print("📥 Clonage du repository...")
-            result = subprocess.run(['git', 'clone', 'https://github.com/L-Poca/DS_COVID.git', '/content/DS_COVID'], 
-                                  capture_output=True, text=True)
-            if result.returncode == 0:
-                print("✅ Repository cloné")
-            else:
-                print(f"❌ Erreur clone: {result.stderr}")
-                return False
-        
-        # 3. Positionnement dans le projet
-        os.chdir('/content/DS_COVID')
-        subprocess.run(['git', 'checkout', 'ReVamp'], capture_output=True)
-        
-        # 4. Installation packages si requirements-colab.txt existe
-        if os.path.exists('./requirements-colab.txt'):
-            print("📦 Installation requirements-colab.txt...")
-            result = subprocess.run(['pip', 'install', '-r', './requirements-colab.txt', '--quiet'], 
-                                  capture_output=True)
-            if result.returncode == 0:
-                print("✅ Requirements Colab installés")
-        
-        # 5. Installation du projet
-        if os.path.exists('./setup.py') or os.path.exists('./pyproject.toml'):
-            print("🔧 Installation du projet...")
-            subprocess.run(['pip', 'install', '-e', '.', '--quiet'], capture_output=True)
-        
-        # 6. Montage Google Drive
-        if not os.path.exists('/content/drive'):
-            print("💾 Montage Google Drive...")
-            from google.colab import drive
-            drive.mount('/content/drive')
-        
-        # 7. Création/mise à jour du .env pour Colab
-        create_colab_env_file()
-        
-        # 8. Extraction dataset si nécessaire
-        setup_colab_dataset()
-        
-        return True
-        
-    except Exception as e:
-        print(f"❌ Erreur configuration Colab: {e}")
-        return False
-
-
-def create_colab_env_file():
-    """Crée un fichier .env optimisé pour Colab à partir du template"""
-    # Chemin vers le template
-    template_path = Path(__file__).parent.parent / 'templates' / 'colab_env.template'
-    
-    try:
-        # Lecture du template
-        with open(template_path, 'r', encoding='utf-8') as f:
-            colab_env_content = f.read()
-        
-        # Écriture du fichier .env
-        with open('.env', 'w', encoding='utf-8') as f:
-            f.write(colab_env_content)
-            
-        print("✅ Fichier .env Colab créé depuis template")
-        return True
-        
-    except FileNotFoundError:
-        print(f"⚠️ Template Colab non trouvé: {template_path}")
-        # Fallback vers l'ancienne méthode si template introuvable
-        return _create_colab_env_fallback()
-    except Exception as e:
-        print(f"❌ Erreur création .env Colab: {e}")
-        return False
-
-
-def _create_colab_env_fallback():
-    """Fallback: création .env Colab sans template"""
-    colab_env_content = '''# CONFIGURATION COLAB AUTO-GÉNÉRÉE RAF (FALLBACK)
-PROJECT_ROOT=.
-DATA_DIR=./data/raw/COVID-19_Radiography_Dataset/COVID-19_Radiography_Dataset
-MODELS_DIR=./models
-RESULTS_DIR=./results
-IMG_WIDTH=256
-IMG_HEIGHT=256
-IMG_CHANNELS=3
-BATCH_SIZE=32
-EPOCHS=50
-LEARNING_RATE=0.001
-VALIDATION_SPLIT=0.2
-TEST_SPLIT=0.2
-RANDOM_SEED=42
-ARCHIVE_PATH=/content/drive/MyDrive/archive_covid.zip
-USE_GPU=true'''
-    
-    with open('.env', 'w') as f:
-        f.write(colab_env_content)
-    print("✅ Fichier .env Colab créé")
-
-
-def setup_colab_dataset():
-    """Configure le dataset pour Colab"""
-    dataset_paths = [
-        './data/raw/COVID-19_Radiography_Dataset/COVID-19_Radiography_Dataset/',
-        './data/raw/COVID-19_Radiography_Dataset/',
-    ]
-    
-    # Vérifier si dataset déjà disponible
-    for path in dataset_paths:
-        if os.path.exists(path) and os.path.exists(f"{path}/COVID"):
-            print(f"✅ Dataset déjà disponible: {path}")
-            return
-    
-    # Extraction depuis Drive si nécessaire
-    archive_path = '/content/drive/MyDrive/archive_covid.zip'
-    if os.path.exists(archive_path):
-        print("📦 Extraction dataset depuis Drive...")
-        os.makedirs('./data/raw/', exist_ok=True)
-        result = subprocess.run(['unzip', '-o', '-q', archive_path, '-d', './data/raw/'], 
-                              capture_output=True)
-        if result.returncode == 0:
-            print("✅ Dataset extrait")
-        else:
-            print("❌ Erreur extraction dataset")
-    else:
-        print("⚠️ Archive dataset non trouvée dans Drive")
-
+from dataclasses import dataclass, field, asdict
+from typing import Optional
 
 @dataclass
 class Config:
-    """Configuration centralisée du projet"""
+    """Configuration centralisée du projet (chargée depuis JSON)"""
     
-    # Chemins
+    # Chemins de base
     project_root: Path
     data_dir: Path
     models_dir: Path
     results_dir: Path
     
-    # Images
+    # Configuration images
     img_width: int = 256
     img_height: int = 256
     img_channels: int = 3
     
-    # Entraînement
+    # Paramètres d'entraînement
     batch_size: int = 32
     epochs: int = 50
     learning_rate: float = 0.001
     validation_split: float = 0.2
     test_split: float = 0.2
+    random_seed: int = 42
     
-    # Classes
-    classes: List[str] = field(default_factory=lambda: ['COVID', 'Lung_Opacity', 'Normal', 'Viral Pneumonia'])
-    num_classes: int = 4
+    # Classes du dataset
+    classes: list[str] = field(default_factory=list)
     
     # Random Forest
     rf_n_estimators: int = 200
@@ -210,10 +51,6 @@ class Config:
     xgb_max_depth: int = 3
     xgb_min_child_weight: int = 1
     
-    # Validation croisée
-    cv_folds: int = 3
-    n_jobs: int = -1
-    
     # Transfer Learning
     pretrained_weights: str = "imagenet"
     freeze_base_layers: bool = True
@@ -225,8 +62,11 @@ class Config:
     reduce_lr_factor: float = 0.5
     min_lr: float = 1e-7
     
+    # Validation croisée
+    cv_folds: int = 3
+    n_jobs: int = -1
+    
     # Système
-    random_seed: int = 42
     verbose: int = 1
     log_level: str = "INFO"
     
@@ -237,7 +77,8 @@ class Config:
     # Visualisation
     plot_style: str = "seaborn-v0_8"
     color_palette: str = "husl"
-    figure_size: Tuple[int, int] = (12, 8)
+    figure_width: int = 12
+    figure_height: int = 8
     dpi: int = 100
     
     # Export
@@ -245,227 +86,176 @@ class Config:
     results_format: str = "csv"
     export_predictions: bool = True
     save_plots: bool = True
+    
+    # Interprétabilité - Grad-CAM
+    gradcam_alpha: float = 0.4
+    gradcam_colormap: str = "jet"
+    gradcam_layer_auto: bool = True
+    
+    # Interprétabilité - SHAP
+    shap_max_evals: int = 100
+    shap_background_size: int = 50
+    shap_model_type: str = "auto"
+    
+    # Interprétabilité - Seuils de confiance
+    confidence_high_threshold: float = 0.8
+    confidence_medium_threshold: float = 0.6
+    
+    # Interprétabilité - Rapports
+    reports_format: str = "csv"
+    reports_save_heatmaps: bool = True
+    reports_generate_dashboard: bool = True
 
     def __post_init__(self):
-        """Post-traitement après initialisation"""
-        if self.classes is None:
-            self.classes = ['COVID', 'Lung_Opacity', 'Normal', 'Viral Pneumonia']
-        self.num_classes = len(self.classes)
+        """Calculs dérivés après initialisation"""
+        self.num_classes = len(self.classes) if self.classes else 4
         self.img_size = (self.img_width, self.img_height)
+        self.figure_size = (self.figure_width, self.figure_height)
+        
+        # Créer les répertoires nécessaires
+        self.models_dir.mkdir(parents=True, exist_ok=True)
+        self.results_dir.mkdir(parents=True, exist_ok=True)
+    
+    def to_dict(self) -> dict:
+        """Convertit la config en dictionnaire (sans les Paths)"""
+        data = asdict(self)
+        # Convertir les Path en str
+        data['project_root'] = str(self.project_root)
+        data['data_dir'] = str(self.data_dir)
+        data['models_dir'] = str(self.models_dir)
+        data['results_dir'] = str(self.results_dir)
+        return data
+    
+    def save(self, filepath: Path):
+        """Sauvegarde la configuration en JSON"""
+        with open(filepath, 'w') as f:
+            json.dump(self.to_dict(), f, indent=2)
 
 
-def get_project_config(env_file: Optional[Path] = None, auto_setup: bool = True) -> Config:
+
+def deep_merge(base: dict, override: dict) -> dict:
     """
-    Configuration universelle avec setup automatique Colab/WSL
+    Fusionne récursivement deux dictionnaires
     
     Args:
-        env_file: Chemin optionnel vers le fichier .env
-        auto_setup: Active la configuration automatique
+        base: Dictionnaire de base
+        override: Dictionnaire de surcharge
         
     Returns:
-        Instance de Config avec tous les paramètres
+        dict: Dictionnaire fusionné
     """
+    result = base.copy()
     
-    print("🔧 === CONFIGURATION UNIVERSELLE RAF ===")
-    
-    # 1. Détection de l'environnement
-    in_colab, in_wsl = detect_environment()
-    
-    if in_colab:
-        print("📍 Environnement: ☁️ Google Colab")
-        if auto_setup:
-            success = setup_colab_environment(Path('/content/DS_COVID'))
-            if success:
-                project_root = Path('/content/DS_COVID')
-                env_file = project_root / '.env'
-            else:
-                print("⚠️ Configuration Colab échouée, mode dégradé")
-                project_root = Path.cwd()
+    for key, value in override.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            result[key] = deep_merge(result[key], value)
         else:
-            project_root = Path.cwd()
-    else:
-        print("📍 Environnement: 💻 WSL/Linux Local")
-        
-        # Chercher la racine du projet
-        if env_file:
-            project_root = env_file.parent
-        else:
-            current = Path.cwd()
-            project_root = None
-            
-            for parent in [current] + list(current.parents):
-                if (parent / '.env').exists():
-                    project_root = parent
-                    env_file = parent / '.env'
-                    break
-            
-            if not project_root:
-                project_root = current
-                print("⚠️ Aucun .env trouvé, utilisation répertoire courant")
-        
-        # Vérification environnement virtuel WSL
-        venv_path = project_root / '.venv'
-        if venv_path.exists():
-            print("✅ Environnement virtuel .venv détecté")
-        else:
-            print("⚠️ Aucun .venv détecté")
+            result[key] = value
     
-    # 2. Chargement de la configuration .env
-    if env_file and env_file.exists():
-        load_dotenv(env_file)
-        print(f"✅ Configuration chargée: {env_file}")
-    else:
-        print("⚠️ Configuration par défaut utilisée")
-    
-    # Construire la configuration
-    config = Config(
-        # Chemins
-        project_root=project_root,
-        data_dir=project_root / 'data' / 'raw' / 'COVID-19_Radiography_Dataset' / 'COVID-19_Radiography_Dataset',
-        models_dir=Path(os.getenv('MODELS_DIR', project_root / 'models')),
-        results_dir=Path(os.getenv('RESULTS_DIR', project_root / 'results')),
-        
-        # Images
-        img_width=int(os.getenv('IMG_WIDTH', '256')),
-        img_height=int(os.getenv('IMG_HEIGHT', '256')),
-        img_channels=int(os.getenv('IMG_CHANNELS', '3')),
-        
-        # Entraînement
-        batch_size=int(os.getenv('BATCH_SIZE', '32')),
-        epochs=int(os.getenv('EPOCHS', '50')),
-        learning_rate=float(os.getenv('LEARNING_RATE', '0.001')),
-        validation_split=float(os.getenv('VALIDATION_SPLIT', '0.2')),
-        test_split=float(os.getenv('TEST_SPLIT', '0.2')),
-        
-        # Classes
-        classes=os.getenv('CLASS_NAMES', 'COVID,Lung_Opacity,Normal,Viral Pneumonia').split(','),
-        
-        # Random Forest
-        rf_n_estimators=int(os.getenv('RF_N_ESTIMATORS', '200')),
-        rf_max_depth=int(os.getenv('RF_MAX_DEPTH', '15')),
-        rf_min_samples_split=int(os.getenv('RF_MIN_SAMPLES_SPLIT', '5')),
-        rf_min_samples_leaf=int(os.getenv('RF_MIN_SAMPLES_LEAF', '2')),
-        
-        # XGBoost
-        xgb_n_estimators=int(os.getenv('XGB_N_ESTIMATORS', '100')),
-        xgb_learning_rate=float(os.getenv('XGB_LEARNING_RATE', '0.1')),
-        xgb_max_depth=int(os.getenv('XGB_MAX_DEPTH', '3')),
-        xgb_min_child_weight=int(os.getenv('XGB_MIN_CHILD_WEIGHT', '1')),
-        
-        # Validation croisée
-        cv_folds=int(os.getenv('CV_FOLDS', '3')),
-        n_jobs=int(os.getenv('N_JOBS', '-1')),
-        
-        # Transfer Learning
-        pretrained_weights=os.getenv('PRETRAINED_WEIGHTS', 'imagenet'),
-        freeze_base_layers=os.getenv('FREEZE_BASE_LAYERS', 'True').lower() == 'true',
-        fine_tune_layers=int(os.getenv('FINE_TUNE_LAYERS', '10')),
-        
-        # Callbacks
-        early_stopping_patience=int(os.getenv('EARLY_STOPPING_PATIENCE', '10')),
-        reduce_lr_patience=int(os.getenv('REDUCE_LR_PATIENCE', '5')),
-        reduce_lr_factor=float(os.getenv('REDUCE_LR_FACTOR', '0.5')),
-        min_lr=float(os.getenv('MIN_LR', '1e-7')),
-        
-        # Système
-        random_seed=int(os.getenv('RANDOM_SEED', '42')),
-        verbose=int(os.getenv('VERBOSE', '1')),
-        log_level=os.getenv('LOG_LEVEL', 'INFO'),
-        
-        # Gestion mémoire
-        max_images_per_class=int(os.getenv('MAX_IMAGES_PER_CLASS', '1000')),
-        sample_size_analysis=int(os.getenv('SAMPLE_SIZE_ANALYSIS', '200')),
-        
-        # Visualisation
-        plot_style=os.getenv('PLOT_STYLE', 'seaborn-v0_8'),
-        color_palette=os.getenv('COLOR_PALETTE', 'husl'),
-        figure_size=(int(os.getenv('FIGURE_SIZE_WIDTH', '12')), int(os.getenv('FIGURE_SIZE_HEIGHT', '8'))),
-        dpi=int(os.getenv('DPI', '100')),
-        
-        # Export
-        model_save_format=os.getenv('MODEL_SAVE_FORMAT', 'h5'),
-        results_format=os.getenv('RESULTS_FORMAT', 'csv'),
-        export_predictions=os.getenv('EXPORT_PREDICTIONS', 'True').lower() == 'true',
-        save_plots=os.getenv('SAVE_PLOTS', 'True').lower() == 'true'
-    )
-    
-    # Créer les répertoires s'ils n'existent pas
-    config.models_dir.mkdir(parents=True, exist_ok=True)
-    config.results_dir.mkdir(parents=True, exist_ok=True)
-    
-    return config
+    return result
 
 
-# Configuration globale par défaut
-_global_config = None
-
-def get_config() -> Config:
-    """Récupère la configuration globale (singleton)"""
-    global _global_config
-    if _global_config is None:
-        _global_config = get_project_config()
-    return _global_config
-
-def set_config(config: Config):
-    """Définit la configuration globale"""
-    global _global_config
-    _global_config = config
-
-def setup_universal_environment() -> Config:
+def flatten_dict(d: dict, parent_key: str = '', sep: str = '_') -> dict:
     """
-    Configuration universelle complète - REMPLACE la cellule 1 du notebook
+    Applatie un dictionnaire imbriqué en utilisant des clés séparées
     
+    Args:
+        d: Dictionnaire à aplatir
+        parent_key: Clé parent (pour récursion)
+        sep: Séparateur pour les clés
+        
     Returns:
-        Config: Configuration prête à l'emploi
+        dict: Dictionnaire aplati
     """
-    print("=" * 60)
-    print("🚀 CONFIGURATION UNIVERSELLE RAF")
-    print("=" * 60)
+    items = []
+    for k, v in d.items():
+        new_key = f"{parent_key}{sep}{k}" if parent_key else k
+        if isinstance(v, dict):
+            items.extend(flatten_dict(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
+
+
+def load_config_files(project_root: Path, environment: str) -> dict:
+    """Charge et merge les fichiers de configuration JSON"""
+    config_dir = project_root / 'src/features/raf/config'
+    default_config_path = config_dir / 'default_config.json'
+    colab_config_path = config_dir / 'colab_config.json'
     
-    # Configuration avec setup automatique
-    config = get_project_config(auto_setup=True)
-    set_config(config)
+    # Charger config par défaut
+    try:
+        with open(default_config_path, 'r') as f:
+            config_data = json.load(f)
+    except FileNotFoundError:
+        print(f"⚠️ Fichier {default_config_path} non trouvé, utilisation config minimale")
+        config_data = {}
     
-    # Affichage récapitulatif
-    in_colab, in_wsl = detect_environment()
-    env_name = "Colab" if in_colab else "WSL/Linux"
+    # Merger avec config Colab si nécessaire
+    if environment == "colab" and colab_config_path.exists():
+        try:
+            with open(colab_config_path, 'r') as f:
+                colab_overrides = json.load(f)
+            config_data = deep_merge(config_data, colab_overrides)
+            print("✅ Configuration Colab chargée et mergée")
+        except Exception as e:
+            print(f"⚠️ Erreur chargement config Colab: {e}")
     
-    print(f"\n📊 === RÉCAPITULATIF ===")
-    print(f"🌍 Environnement: {env_name}")
-    print(f"📂 Projet: {config.project_root}")
-    print(f"📊 Dataset: {config.data_dir}")
-    print(f"🎛️ Images: {config.img_size}")
-    print(f"🏷️ Classes: {config.classes}")
-    print(f"🔧 Batch size: {config.batch_size}")
-    print(f"🎯 Époques: {config.epochs}")
+    return config_data
+
+
+def build_config(project_root: Path, environment: str) -> Config:
+    """Construit l'objet Config depuis les fichiers JSON"""
     
-    # Vérification dataset
-    if config.data_dir.exists():
-        print(f"✅ Dataset accessible")
-        
-        # Comptage rapide des images
-        total_images = 0
-        for cls in config.classes:
-            class_paths = [
-                config.data_dir / cls / "images",
-                config.data_dir / cls
-            ]
-            
-            for class_path in class_paths:
-                if class_path.exists():
-                    images = list(class_path.glob("*.png")) + list(class_path.glob("*.jpg"))
-                    count = len(images)
-                    print(f"  {cls}: {count:,} images")
-                    total_images += count
-                    break
-            else:
-                print(f"  {cls}: ❌ Non trouvé")
-        
-        print(f"🎯 TOTAL: {total_images:,} images")
-    else:
-        print(f"❌ Dataset non accessible: {config.data_dir}")
+    # Charger les fichiers JSON
+    config_data = load_config_files(project_root, environment)
+    flat_config = flatten_dict(config_data)
     
-    print(f"\n🎉 CONFIGURATION UNIVERSELLE TERMINÉE!")
-    print(f"💡 Prêt pour l'entraînement ML/DL")
+    # Construire les chemins
+    data_dir_str = flat_config.get('paths_data_dir', 'data')
+    data_dir = project_root / data_dir_str if not Path(data_dir_str).is_absolute() else Path(data_dir_str)
     
-    return config
+    models_dir = project_root / flat_config.get('paths_models_dir', 'models')
+    results_dir = project_root / flat_config.get('paths_results_dir', 'results')
+    
+    # Mapping des champs JSON vers Config
+    config_kwargs = {
+        'project_root': project_root,
+        'data_dir': data_dir,
+        'models_dir': models_dir,
+        'results_dir': results_dir,
+        'img_width': flat_config.get('images_width', 256),
+        'img_height': flat_config.get('images_height', 256),
+        'img_channels': flat_config.get('images_channels', 3),
+        'batch_size': flat_config.get('training_batch_size', 32),
+        'epochs': flat_config.get('training_epochs', 50),
+        'learning_rate': flat_config.get('training_learning_rate', 0.001),
+        'validation_split': flat_config.get('training_validation_split', 0.2),
+        'test_split': flat_config.get('training_test_split', 0.2),
+        'random_seed': flat_config.get('training_random_seed', 42),
+        'classes': flat_config.get('dataset_classes', []),
+        'rf_n_estimators': flat_config.get('models_random_forest_n_estimators', 200),
+        'rf_max_depth': flat_config.get('models_random_forest_max_depth', 15),
+        'xgb_n_estimators': flat_config.get('models_xgboost_n_estimators', 100),
+        'xgb_learning_rate': flat_config.get('models_xgboost_learning_rate', 0.1),
+        'pretrained_weights': flat_config.get('models_transfer_learning_pretrained_weights', 'imagenet'),
+        'freeze_base_layers': flat_config.get('models_transfer_learning_freeze_base_layers', True),
+        'fine_tune_layers': flat_config.get('models_transfer_learning_fine_tune_layers', 10),
+        'early_stopping_patience': flat_config.get('callbacks_early_stopping_patience', 10),
+        'reduce_lr_patience': flat_config.get('callbacks_reduce_lr_patience', 5),
+        'reduce_lr_factor': flat_config.get('callbacks_reduce_lr_factor', 0.5),
+        'min_lr': flat_config.get('callbacks_min_lr', 1e-7),
+        'plot_style': flat_config.get('visualization_plot_style', 'seaborn-v0_8'),
+        'color_palette': flat_config.get('visualization_color_palette', 'husl'),
+        'figure_width': flat_config.get('visualization_figure_width', 12),
+        'figure_height': flat_config.get('visualization_figure_height', 8),
+        'dpi': flat_config.get('visualization_dpi', 100),
+        'gradcam_alpha': flat_config.get('interpretability_gradcam_alpha', 0.4),
+        'gradcam_colormap': flat_config.get('interpretability_gradcam_colormap', 'jet'),
+        'shap_max_evals': flat_config.get('interpretability_shap_max_evals', 100),
+        'shap_background_size': flat_config.get('interpretability_shap_background_size', 50),
+        'confidence_high_threshold': flat_config.get('interpretability_confidence_high_threshold', 0.8),
+        'confidence_medium_threshold': flat_config.get('interpretability_confidence_medium_threshold', 0.6),
+    }
+    
+    return Config(**config_kwargs)

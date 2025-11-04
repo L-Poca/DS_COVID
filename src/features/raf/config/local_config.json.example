@@ -1,0 +1,15 @@
+{
+  "paths": {
+    "project_root": "/home/cepa/DST/projet_DS/DS_COVID",
+    "data_dir": "/home/cepa/DST/projet_DS/DS_COVID/data/raw/COVID-19_Radiography_Dataset/COVID-19_Radiography_Dataset",
+    "models_dir": "/home/cepa/DST/projet_DS/DS_COVID/models",
+    "results_dir": "/home/cepa/DST/projet_DS/DS_COVID/results"
+  },
+  "training": {
+    "batch_size": 32,
+    "epochs": 50
+  },
+  "system": {
+    "verbose": 1
+  }
+}
