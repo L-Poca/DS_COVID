@@ -60,7 +60,6 @@ ignore = [
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
-skip-string-normalization = false
 line-ending = "auto"
 
 [tool.pytest.ini_options]
