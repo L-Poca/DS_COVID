@@ -1,15 +1,16 @@
 {
   "name": "Deep Learning Pipeline with TensorFlow",
   "description": "Pipeline utilisant des transformateurs TensorFlow pour l'extraction de caractéristiques et la classification",
-  "version": "1.0",
-  "type": "simple",
   "steps": [
     {
-      "name": "loader",
+      "name": "img_loader",
       "class": "ImageLoader",
-      "params": {
-        "img_size": [224, 224]
-      }
+      "params": {}
+    },
+    {
+      "name": "img_resizer",
+      "class": "ImageResizer",
+      "params": { "img_size": [256, 256] }
     },
     {
       "name": "tensorflow_augmenter",

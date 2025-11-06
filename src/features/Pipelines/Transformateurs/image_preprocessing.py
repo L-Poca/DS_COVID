@@ -212,3 +212,19 @@ class ImageBinarizer(BaseEstimator, TransformerMixin):
         """
         print(f"Binarisation avec seuil {self.threshold}")
         return (data_x > self.threshold).astype(np.float32)
+
+class AddChannelDim(BaseEstimator, TransformerMixin):
+    """
+    Transformateur qui ajoute une dimension de canal aux images 2D (N&B).
+    """
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X, y=None):
+        # X peut être une liste ou un array de np.ndarray
+        X_out = []
+        for img in X:
+            if img.ndim == 2:
+                img = np.expand_dims(img, axis=-1)  # (H, W) -> (H, W, 1)
+            X_out.append(img)
+        return np.array(X_out)

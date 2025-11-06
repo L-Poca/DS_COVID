@@ -1,0 +1,38 @@
+{
+  "data": {
+    "images_path": "data/images/",
+    "masks_path": "data/masks/",
+    "labels_path": "data/labels.csv",
+    "image_size": [224, 224],
+    "apply_mask": true,
+    "test_split": 0.2,
+    "random_seed": 42
+  },
+
+  "augmentation": {
+    "random_flip": true,
+    "random_rotation": 0.05,
+    "random_contrast": 0.1
+  },
+
+  "model": {
+    "base": "EfficientNetB0",
+    "trainable": false,
+    "dropout": 0.3,
+    "dense_units": 128,
+    "num_classes": 4
+  },
+
+  "training": {
+    "batch_size": 32,
+    "epochs": 10,
+    "optimizer": "adam",
+    "learning_rate": 0.001,
+    "validation_split": 0.2
+  },
+
+    "output": {
+      "model_path": "models/effnet_xray.h5",
+      "history_path": "models/training_history.json"
+    }
+  }

@@ -21,12 +21,14 @@ except ImportError:
     RAF_AVAILABLE = False
     st.error("⚠️ Module RAF d'interprétabilité non disponible")
 
-# Configuration de la page
+
+# Cette partie est dejà presente dans app.py , la reconfigurer empeche l'affichage de la page
+"""# Configuration de la page
 st.set_page_config(
     page_title="Interprétabilité - SHAP & GradCAM",
     page_icon="🔍",
     layout="wide"
-)
+)"""
 
 st.title("🔍 Interprétabilité des Modèles - SHAP & GradCAM")
 st.markdown("---")

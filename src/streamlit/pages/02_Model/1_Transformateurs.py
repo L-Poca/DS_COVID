@@ -891,7 +891,7 @@ def main():
     # Header avec style
     st.title("🔍 Scanner de Transformateurs")
     st.markdown("""
-    <div style="background-color: #f0f2f6; padding: 1rem; border-radius: 0.5rem; margin-bottom: 2rem;">
+    <div style="background-color: #435a5e; padding: 1rem; border-radius: 0.5rem; margin-bottom: 2rem;">
     <h4>🎯 Objectif</h4>
     Cette page scanne automatiquement le projet pour découvrir et cataloguer tous les transformateurs disponibles :
     <br>• <b>Transformateurs personnalisés</b> du projet COVID

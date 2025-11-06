@@ -1,0 +1,28 @@
+{
+  "name": "pipeline_Covid",
+  "description": "Pipeline optimal pour la détection COVID sur radios pulmonaires avec masques",
+  "steps": [
+    { "name": "img_loader", "class": "ImageLoader", "params": {} },
+    { "name": "img_resizer", "class": "ImageResizer", "params": { "img_size": [224, 224] } },
+    { "name": "img_masker", "class": "ImageMasker", "params": { "mask_paths": "masks" } },
+    { "name": "add_channel_dim", "class": "AddChannelDim", "params": {} },
+    { "name": "img_normalizer", "class": "ImageNormalizer", "params": {} },
+    { "name": "tensorflow_augmenter", "class": "TensorFlowDataAugmenter", "params": {
+        "rotation_range": 0.2,
+        "width_shift_range": 0.1,
+        "height_shift_range": 0.1,
+        "zoom_range": 0.1,
+        "horizontal_flip": true,
+        "brightness_range": [0.8, 1.2],
+        "apply_augmentation": true
+      }
+    },
+    { "name": "feature_extractor", "class": "TensorFlowFeatureExtractor", "params": {
+        "model_name": "EfficientNetB0",
+        "weights": "imagenet",
+        "trainable": false
+      }
+    },
+    { "name": "classifier", "class": "LogisticRegression", "params": {} }
+  ]
+}
